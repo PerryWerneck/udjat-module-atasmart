@@ -27,6 +27,9 @@
  private:
 	const char *name;
 
+	/// @brief Load default states.
+	void setDefaultStates();
+
  public:
 
  	Device(const char *name);

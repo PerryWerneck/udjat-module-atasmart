@@ -2,4 +2,6 @@
 
 <config>
 
+	<atasmart device-name='/dev/sda' />
+	
 </config>

@@ -71,7 +71,7 @@ LIBS= \
 	@UDJAT_LIBS@ \
 	@PUGIXML_LIBS@ \
 	@JSONCPP_LIBS@ \
-	@SMART_CFLAGS@
+	@SMART_LIBS@
 
 #---[ Debug Rules ]----------------------------------------------------------------------
 

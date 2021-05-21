@@ -20,6 +20,7 @@
  #include <config.h>
  #include <udjat/module.h>
  #include <udjat/factory.h>
+ #include <device.h>
 
  using namespace Udjat;
  using namespace std;
@@ -32,15 +33,31 @@
 	PACKAGE_BUGREPORT 							// The bug report address.
  };
 
- class Module : public Udjat::Module {
+ class Module : public Udjat::Module, Udjat::Factory {
  public:
 
- 	Module() : Udjat::Module("atasmart",&moduleinfo) {
+ 	Module() : Udjat::Module("atasmart",&moduleinfo), Udjat::Factory("atasmart",&moduleinfo) {
  	};
 
  	virtual ~Module() {
  	}
 
+	void parse(Abstract::Agent &parent, const pugi::xml_node &node) const override {
+
+		const char * devname = node.attribute("device-name").as_string();
+
+		if(*devname) {
+
+			// Has device name, create a device node.
+			parent.insert(make_shared<Device>(devname,node));
+
+		} else {
+
+			// No device name, create a container with all detected devices.
+			cerr << "atasmart\tNot implemented" << endl;
+		}
+
+	}
 
  };
 

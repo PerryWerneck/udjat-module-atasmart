@@ -40,15 +40,6 @@ static void agent_test() {
 
 }
 
-static void device_test() {
-
-	Device device("/dev/sda");
-
-	device.refresh();
-
-
-}
-
 int main(int argc, char **argv) {
 
 	setlocale( LC_ALL, "" );
@@ -56,7 +47,7 @@ int main(int argc, char **argv) {
 	Module::load("http");
 	auto module = udjat_module_init();
 
-	// agent_test();
+	agent_test();
 
 	cout << "Removing module" << endl;
 	delete module;
