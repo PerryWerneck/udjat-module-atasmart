@@ -30,6 +30,9 @@
 	/// @brief Load default states.
 	void setDefaultStates();
 
+	/// @brief Initialize
+	void init();
+
  public:
 
  	Device(const char *name);

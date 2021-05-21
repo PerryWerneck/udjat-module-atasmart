@@ -36,7 +36,17 @@
  using namespace Udjat;
  using namespace std;
 
- Device::Device(const char *n) : name(Quark(n).c_str()) {
+ static const char * getAgentName(const char * devname) {
+
+	const char * ptr = strrchr(devname,'/');
+	if(!ptr)
+		return Quark(ptr+1).c_str();
+
+	return "disk";
+ }
+
+ Device::Device(const char *n) : Agent<unsigned int>(getAgentName(n)), name(Quark(n).c_str()) {
+ 	init();
  	setDefaultStates();
  }
 
@@ -46,12 +56,65 @@
 	cout << getName() << "\tCreating device " << n << endl;
 #endif // DEBUG
 
+	init();
  	Abstract::Agent::load(node);
 
  	if(!hasStates()) {
 		setDefaultStates();
  	}
 
+ }
+
+ void Device::init() {
+
+ 	icon = "drive-harddisk";
+
+ 	// Get data from disk.
+ 	SkDisk *d;
+
+ 	if(sk_disk_open(name, &d) < 0) {
+		cerr << getName() << "\tCant open " << name << ": " << strerror(errno) << endl;
+		return;
+	}
+
+	if(sk_disk_smart_read_data(d) >= 0) {
+
+		const SkIdentifyParsedData *ipd;
+		if(sk_disk_identify_parse(d, &ipd) >= 0) {
+			string label{ipd->model};
+
+			uint64_t bytes = 0;
+			if(sk_disk_get_size(d,&bytes) >= 0) {
+				label += " (";
+
+				if(bytes > 1073741824LL) {
+					label += std::to_string(bytes / 1073741824LL);
+					label += " GB";
+				} else if(bytes > 1048576LL) {
+					label += std::to_string(bytes / 1048576LL);
+					label += " MB";
+				} else if(bytes > 1024LL) {
+					label += std::to_string(bytes / 1024LL);
+					label += " KB";
+				} else {
+					label += std::to_string(bytes);
+					label += " B";
+				}
+
+				label += ")";
+			}
+
+			this->label = Quark(label).c_str();
+
+		} else {
+			cerr << getName() << "\tCant identify disk" << endl;
+		}
+
+	} else {
+		cerr << getName() << "\tCant read disk data: " << strerror(errno) << endl;
+	}
+
+	sk_disk_free(d);
  }
 
  Device::Device(const pugi::xml_node &node) : Device(node.attribute("device-name").as_string(),node) {
@@ -92,6 +155,7 @@
 
  /// @brief Export device info.
  void Device::get(const Request &request, Response &response) {
+ 	Abstract::Agent::get(request,response);
  }
 
  Device::~Device() {
