@@ -8,7 +8,7 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output=".bin/Debug/UDJat ATA SMART Module" prefix_auto="1" extension_auto="1" />
+				<Option output=".bin/Debug/udjat-module-atasmart-test" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -33,8 +33,10 @@
 			<Add option="-Wall" />
 		</Compiler>
 		<Unit filename="src/include/device.h" />
-		<Unit filename="src/module/device.cc" />
+		<Unit filename="src/module/agent.cc" />
+		<Unit filename="src/module/disk.cc" />
 		<Unit filename="src/module/init.cc" />
+		<Unit filename="src/module/private.h" />
 		<Unit filename="src/testprogram/testprogram.cc" />
 		<Extensions />
 	</Project>

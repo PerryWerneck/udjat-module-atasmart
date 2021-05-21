@@ -21,7 +21,6 @@
  #include <udjat/module.h>
  #include <udjat/tools/logger.h>
  #include <unistd.h>
- #include <device.h>
 
  using namespace std;
  using namespace Udjat;
@@ -34,6 +33,7 @@ static void agent_test() {
 		cout << "http://localhost:8989/api/1.0/agent/" << agent->getName() << endl;
 	}
 
+	cout << "Waiting for requests" << endl;
 	Udjat::run();
 
 	Abstract::Agent::deinit();
@@ -43,6 +43,8 @@ static void agent_test() {
 int main(int argc, char **argv) {
 
 	setlocale( LC_ALL, "" );
+
+	Logger::redirect(nullptr,true);
 
 	Module::load("http");
 	auto module = udjat_module_init();

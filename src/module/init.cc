@@ -20,9 +20,8 @@
  #include <config.h>
  #include <udjat/module.h>
  #include <udjat/factory.h>
- #include <device.h>
+ #include "private.h"
 
- using namespace Udjat;
  using namespace std;
 
  static const Udjat::ModuleInfo moduleinfo{
@@ -42,14 +41,14 @@
  	virtual ~Module() {
  	}
 
-	void parse(Abstract::Agent &parent, const pugi::xml_node &node) const override {
+	void parse(Udjat::Abstract::Agent &parent, const pugi::xml_node &node) const override {
 
 		const char * devname = node.attribute("device-name").as_string();
 
 		if(*devname) {
 
 			// Has device name, create a device node.
-			parent.insert(make_shared<Device>(devname,node));
+			parent.insert(make_shared<Smart::Agent>(devname,node));
 
 		} else {
 
