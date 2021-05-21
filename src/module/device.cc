@@ -175,42 +175,42 @@
  	        SK_SMART_OVERALL_GOOD,
 			"good",
 			Abstract::State::ready,
-			"Disk is ok",
+			"${agent.name} Health is Good",
 			""
 		},
 		{
 			SK_SMART_OVERALL_BAD_ATTRIBUTE_IN_THE_PAST,
 			"badonthepast",
 			Abstract::State::ready,
-			"Pre fail in the past",
-			"At least one pre-fail attribute exceeded its threshold in the past"
+			"Pre fail in the past on ${agent.name}",
+			"At least one pre-fail attribute exceeded its threshold in the past on ${agent.name}"
 		},
 		{
 			SK_SMART_OVERALL_BAD_SECTOR,
 			"badsector",
 			Abstract::State::warning,
-			"Bad sector",
-			"At least one bad sector"
+			"Bad sector on ${name}",
+			"At least one bad sector on ${agent.name}"
 		},
 		{
 			SK_SMART_OVERALL_BAD_ATTRIBUTE_NOW,
 			"badattribute",
 			Abstract::State::error,
-			"Pre fail exceeded",
-			"At least one pre-fail attribute is exceeding its threshold now"
+			"Pre fail exceeded on ${name}",
+			"At least one pre-fail attribute is exceeding its threshold now on ${agent.name}"
 		},
 		{
 			SK_SMART_OVERALL_BAD_SECTOR_MANY,
 			"manybad",
 			Abstract::State::error,
-			"Many bad sectors",
+			"Many bad sectors on ${agent.name}",
 			""
 		},
 		{
 			SK_SMART_OVERALL_BAD_STATUS,
 			"badstatus",
 			Abstract::State::error,
-			"Smart Self Assessment negative",
+			"Smart Self Assessment negative on ${agent.name}",
 			""
 		},
 
@@ -220,13 +220,19 @@
 
  	for(size_t ix = 0; ix < (sizeof(states)/ sizeof(states[0])); ix++) {
 
+		string summary(states[ix].summary);
+		string body(states[ix].body);
+
+		expand(summary);
+		expand(body);
+
 		push_back(
 			make_shared<State<unsigned int>>(
 				states[ix].name,
 				states[ix].value,
 				states[ix].level,
-				states[ix].summary,
-				states[ix].body
+				Quark(summary).c_str(),
+				Quark(body).c_str()
 			)
 		);
 
