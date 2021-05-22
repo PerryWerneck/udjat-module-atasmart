@@ -58,7 +58,7 @@
 		setDefaultStates();
 	 }
 
-	 Agent::Agent(const char *n, const pugi::xml_node &node) : Udjat::Agent<unsigned int>(getAgentName(n), _SK_SMART_OVERALL_MAX), name(Quark(n).c_str()) {
+	 Agent::Agent(const char *n, const pugi::xml_node &node) : Udjat::Agent<unsigned int>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
 		init();
 		load(node);
 		if(!hasStates()) {
@@ -104,10 +104,10 @@
 
 		}
 
-	 }
+	}
 
-	 /// @brief Get device status, update internal state.
-	 void Agent::refresh() {
+	/// @brief Get device status, update internal state.
+	void Agent::refresh() {
 
 		try {
 
@@ -119,20 +119,20 @@
 
 		}
 
-	 }
+	}
 
-	 /// @brief Export device info.
-	 void Agent::get(const Udjat::Request &request, Udjat::Response &response) {
+	/// @brief Export device info.
+	void Agent::get(const Udjat::Request &request, Udjat::Response &response) {
 
 		Udjat::Abstract::Agent::get(request,response);
 
 
-	 }
+	}
 
-	 Agent::~Agent() {
-	 }
+	Agent::~Agent() {
+	}
 
-	 void Agent::setDefaultStates() {
+	void Agent::setDefaultStates() {
 
 		static const struct {
 			unsigned int					  value;		///< @brief Agent value for the state.
@@ -209,8 +209,7 @@
 
 		}
 
-	 }
-
+	}
 
  }
 
