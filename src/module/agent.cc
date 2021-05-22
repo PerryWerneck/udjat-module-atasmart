@@ -53,12 +53,12 @@
 
 	 }
 
-	 Agent::Agent(const char *n) : Udjat::Agent<unsigned int>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
+	 Agent::Agent(const char *n) : Udjat::Agent<unsigned int>(getAgentName(n), _SK_SMART_OVERALL_MAX), name(Quark(n).c_str()) {
 		init();
 		setDefaultStates();
 	 }
 
-	 Agent::Agent(const char *n, const pugi::xml_node &node) : Udjat::Agent<unsigned int>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
+	 Agent::Agent(const char *n, const pugi::xml_node &node) : Udjat::Agent<unsigned int>(getAgentName(n), _SK_SMART_OVERALL_MAX), name(Quark(n).c_str()) {
 		init();
 		load(node);
 		if(!hasStates()) {
@@ -197,7 +197,6 @@
 			expand(summary);
 			expand(body);
 
-			/*
 			push_back(
 				make_shared<Udjat::State<unsigned int>>(
 					states[ix].name,
@@ -207,7 +206,6 @@
 					Quark(body).c_str()
 				)
 			);
-			*/
 
 		}
 
