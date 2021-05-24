@@ -19,6 +19,7 @@
 
  #include "private.h"
  #include <udjat/temperature.h>
+ #include <udjat/tools/configuration.h>
 
  using namespace std;
 
@@ -121,8 +122,14 @@
 			throw system_error(errno, system_category(), "Can't get temperature");
 		}
 
-		return Temperature( ((float) value / 1000), Temperature::Kelvin);
 
+		Temperature temperature( ((float) value / 1000), Temperature::Kelvin);
+
+		Config::Value<string> unitname("smart","temperature-unit","celsius");
+
+		temperature.set((Temperature::Unity) ::toupper(unitname[0]));
+
+		return temperature;
 	}
 
 	string Disk::formattedSize() {
