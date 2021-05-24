@@ -35,8 +35,8 @@
 		};
 
 	private:
-		float value;
 		Unity unity;
+		float value;
 
 	public:
 

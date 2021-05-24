@@ -108,8 +108,6 @@
 
 	std::string Temperature::to_string() const {
 
-		float t;
-
 		// https://www.delftstack.com/howto/cpp/how-to-convert-float-to-string-in-cpp/
 		// https://www.delftstack.com/howto/cpp/cpp-round-to-2-decimals/
 		std::stringstream sstream;

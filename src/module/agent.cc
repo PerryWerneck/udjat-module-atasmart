@@ -131,6 +131,7 @@
 			Disk disk(name);
 			disk.read();
 
+			response["temperature"] = disk.temperature().to_string().c_str();
 
 		} catch(const exception &e) {
 
