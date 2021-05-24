@@ -21,6 +21,7 @@
 
  #include "private.h"
  #include <udjat/agent.h>
+ #include <udjat/temperature.h>
  #include <string>
  #include <atasmart.h>
 
@@ -28,12 +29,12 @@
 
  namespace Smart {
 
-	 /// @brief S.M.A.R.T. disk abstraction.
-	 class Disk {
-	 private:
+	/// @brief S.M.A.R.T. disk abstraction.
+	class Disk {
+	private:
 		SkDisk *d;
 
-	 public:
+	public:
 		Disk(const char *name);
 		~Disk();
 
@@ -42,14 +43,19 @@
 		SkSmartOverall getOverral();
 
 		uint64_t size();
+		uint64_t badsectors();
+		uint64_t poweron();
+		uint64_t powercicle();
+
+		Udjat::Temperature temperature();
 
 		std::string formattedSize();
 
-	 };
+	};
 
-	 /// @brief S.M.A.R.T. agent.
-	 class Agent : public Udjat::Agent<unsigned int> {
-	 private:
+	/// @brief S.M.A.R.T. agent.
+	class Agent : public Udjat::Agent<unsigned short> {
+	private:
 		const char *name;
 
 		/// @brief Load default states.
@@ -58,7 +64,7 @@
 		/// @brief Initialize
 		void init();
 
-	 public:
+	public:
 
 		Agent(const char *name);
 		Agent(const pugi::xml_node &node);
@@ -73,7 +79,7 @@
 
 		virtual ~Agent();
 
-	 };
+	};
 
  }
 

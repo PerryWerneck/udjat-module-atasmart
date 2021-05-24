@@ -18,6 +18,7 @@
  */
 
  #include "private.h"
+ #include <udjat/temperature.h>
 
  using namespace std;
 
@@ -36,6 +37,9 @@
 	 }
 
 	 Disk & Disk::read() {
+
+		// TODO: Reading SMART data might cause the disk to wake up from sleep. Hence from monitoring daemons make sure to call sk_disk_check_power_mode() to check wether the disk is sleeping and skip the read if so
+
 		if(sk_disk_smart_read_data(d) < 0) {
 			throw system_error(errno, system_category(), "Can't read S.M.A.R.T. data");
 		}
@@ -64,16 +68,64 @@
 
 	 uint64_t Disk::size() {
 
-		uint64_t bytes;
+		uint64_t value;
 
-		if(sk_disk_get_size(d,&bytes) < 0) {
+		if(sk_disk_get_size(d,&value) < 0) {
 			throw system_error(errno, system_category(), "Can't get S.M.A.R.T. disk size");
 		}
 
-		return bytes;
+		return value;
+
 	 }
 
-	 string Disk::formattedSize() {
+	uint64_t Disk::badsectors() {
+
+		uint64_t value;
+
+		if(sk_disk_smart_get_bad(d,&value) < 0) {
+			throw system_error(errno, system_category(), "Can't get bad sectors");
+		}
+
+		return value;
+
+	}
+
+	uint64_t Disk::poweron() {
+
+		uint64_t value;
+
+		if(sk_disk_smart_get_power_on(d,&value) < 0) {
+			throw system_error(errno, system_category(), "Can't get power on");
+		}
+
+		return value;
+
+	}
+
+	uint64_t Disk::powercicle() {
+
+		uint64_t value;
+
+		if(sk_disk_smart_get_power_cycle(d,&value) < 0) {
+			throw system_error(errno, system_category(), "Can't get power cicle");
+		}
+
+		return value;
+
+	}
+
+	Temperature Disk::temperature() {
+
+		uint64_t value;
+		if(sk_disk_smart_get_temperature(d,&value) < 0) {
+			throw system_error(errno, system_category(), "Can't get temperature");
+		}
+
+		return Temperature( ((float) value / 1000), Temperature::Kelvin);
+
+	}
+
+	string Disk::formattedSize() {
 
 		static const struct {
 			uint64_t value;
