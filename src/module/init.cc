@@ -20,6 +20,8 @@
  #include <config.h>
  #include <udjat/module.h>
  #include <udjat/factory.h>
+ #include <unistd.h>
+ #include <fstream>
  #include "private.h"
 
  using namespace std;
@@ -43,17 +45,86 @@
 
 	void parse(Udjat::Abstract::Agent &parent, const pugi::xml_node &node) const override {
 
+		/// @brief Container with all disks
+		class Container : public Abstract::Agent {
+		public:
+			Container(const pugi::xml_node &node) : Abstract::Agent("storage") {
+
+				icon = "drive-multidisk";
+				label = "Physical disks";
+				load(node);
+
+				// Load disks
+				std::ifstream proc("/proc/partitions");
+
+				string dunno;
+				getline(proc,dunno);
+
+				do {
+
+					uint16_t major, minor;
+					int blocks;
+					string name;
+
+					proc >> major >> minor >> blocks >> name;
+
+					if(minor == 0 && !name.empty()) {
+						this->insert(make_shared<Smart::Agent>((string{"/dev/"} + name).c_str(),node,false));
+					}
+
+				} while(!proc.eof());
+
+			}
+
+			virtual ~Container() {
+			}
+
+			/// @brief Export device info.
+			void get(const Udjat::Request &request, Udjat::Response &response) override {
+
+				Abstract::Agent::get(request,response);
+
+				Json::Value devices(Json::arrayValue);
+
+				for(auto child : *this) {
+
+					auto agent = dynamic_cast<Smart::Agent *>(child.get());
+					if(!agent)
+						continue;
+
+					// Refresh agent data (if necessary).
+					agent->Abstract::Agent::refresh(true);
+
+					// It's an smart agent, export it.
+					Json::Value device(Json::objectValue);
+
+					device["name"] = agent->getName();
+					device["device"] = agent->getDeviceName();
+					device["summary"] = agent->getSummary();
+					device["state"] = agent->getState()->getSummary();
+
+					devices.append(device);
+
+				}
+
+				response["devices"] = devices;
+
+			}
+
+		};
+
 		const char * devname = node.attribute("device-name").as_string();
 
 		if(*devname) {
 
 			// Has device name, create a device node.
-			parent.insert(make_shared<Smart::Agent>(devname,node));
+			parent.insert(make_shared<Smart::Agent>(devname,node,true));
 
 		} else {
 
 			// No device name, create a container with all detected devices.
-			cerr << "atasmart\tNot implemented" << endl;
+			parent.insert(make_shared<Container>(node));
+
 		}
 
 	}

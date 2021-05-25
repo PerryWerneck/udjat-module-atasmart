@@ -2,6 +2,9 @@
 
 <config>
 
-	<atasmart device-name='/dev/sda' />
+	<!-- atasmart device-name='/dev/sda' / -->
+
+	<atasmart name='storage' />
 	
 </config>
+

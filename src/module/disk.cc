@@ -18,12 +18,13 @@
  */
 
  #include "private.h"
- #include <udjat/temperature.h>
+ #include <udjat/tools/temperature.h>
+ #include <udjat/tools/disk.h>
  #include <udjat/tools/configuration.h>
 
  using namespace std;
 
- namespace Smart {
+ namespace Udjat {
 
 	 Disk::Disk(const char *name) : d(nullptr) {
 
@@ -47,15 +48,27 @@
 		return *this;
 	 }
 
-	 const SkIdentifyParsedData * Disk::identify() {
+	bool Disk::identify_is_available() {
+
+		SkBool available = 0;
+
+		if(sk_disk_identify_is_available(d,&available) < 0) {
+			throw system_error(errno, system_category(), "Can't teste if identify is available");
+		}
+
+		return available != 0;
+
+	}
+
+	const SkIdentifyParsedData * Disk::identify() {
 		const SkIdentifyParsedData *ipd;
 		if(sk_disk_identify_parse(d, &ipd) < 0) {
 			throw system_error(errno, system_category(), "Can't parse S.M.A.R.T. identify");
 		}
 		return ipd;
-	 }
+	}
 
-	 SkSmartOverall Disk::getOverral() {
+	SkSmartOverall Disk::getOverral() {
 
 		SkSmartOverall overall;
 
@@ -65,9 +78,20 @@
 
 		return overall;
 
-	 }
+	}
 
-	 uint64_t Disk::size() {
+	bool Disk::is_awake() {
+		SkBool awake = 0;
+
+		if(sk_disk_check_sleep_mode(d,&awake) < 0) {
+			throw system_error(errno, system_category(), "Can't get disk awake state");
+		}
+
+		return awake != 0;
+
+	}
+
+	uint64_t Disk::size() {
 
 		uint64_t value;
 
@@ -77,7 +101,7 @@
 
 		return value;
 
-	 }
+	}
 
 	uint64_t Disk::badsectors() {
 
@@ -93,13 +117,13 @@
 
 	uint64_t Disk::poweron() {
 
-		uint64_t value;
+		uint64_t mseconds;
 
-		if(sk_disk_smart_get_power_on(d,&value) < 0) {
+		if(sk_disk_smart_get_power_on(d,&mseconds) < 0) {
 			throw system_error(errno, system_category(), "Can't get power on");
 		}
 
-		return value;
+		return mseconds;
 
 	}
 
@@ -122,10 +146,10 @@
 			throw system_error(errno, system_category(), "Can't get temperature");
 		}
 
-
+		// The smart value is in 'Kelvin'
 		Temperature temperature( ((float) value / 1000), Temperature::Kelvin);
 
-		Config::Value<string> unitname("smart","temperature-unit","celsius");
+		Config::Value<string> unitname("smart","temperature-unit","C");
 
 		temperature.set((Temperature::Unity) ::toupper(unitname[0]));
 
@@ -138,9 +162,10 @@
 			uint64_t value;
 			const char *name;
 		} values[] = {
-			{ 1073741824LL,	"GB"	},
-			{ 1048576LL,	"MB"	},
-			{ 1024LL,		"KB"	}
+			{ 1000000000000LL,	"TB"	},
+			{ 1000000000LL,		"GB"	},
+			{ 1000000LL,		"MB"	},
+			{ 1000LL,			"KB"	}
 		};
 
 		uint64_t bytes = size();

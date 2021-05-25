@@ -17,7 +17,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- #include <udjat/temperature.h>
+ #include <udjat/tools/temperature.h>
  #include <sstream>
 
  using namespace std;

@@ -19,48 +19,49 @@
 
  #pragma once
 
- #include "private.h"
+ #include <udjat/defs.h>
  #include <udjat/agent.h>
  #include <udjat/tools/temperature.h>
  #include <string>
  #include <atasmart.h>
 
- using namespace Udjat;
+ namespace Udjat {
 
- namespace Smart {
-
-	/// @brief S.M.A.R.T. agent.
-	class Agent : public Udjat::Agent<unsigned short> {
+	/// @brief S.M.A.R.T. disk abstraction.
+	class UDJAT_API Disk {
 	private:
-		const char *name;
-
-		/// @brief Load default states.
-		void setDefaultStates();
-
-		/// @brief Initialize
-		void init();
+		SkDisk *d;
 
 	public:
+		Disk(const char *name);
+		~Disk();
 
-		Agent(const char *name);
-		Agent(const pugi::xml_node &node);
-		Agent(const char *name, const pugi::xml_node &node, bool name_from_xml);
+		Disk & read();
+		const SkIdentifyParsedData * identify();
+		SkSmartOverall getOverral();
 
-		/// @brief Get device name.
-		inline const char * getDeviceName() const noexcept {
-			return this->name;
-		}
+		uint64_t size();
+		uint64_t badsectors();
 
-		/// @brief Get device status, update internal state.
-		void refresh() override;
+		/// @brief get the power on time.
+		uint64_t poweron();
 
-		/// @brief Export device info.
-		void get(const Udjat::Request &request, Udjat::Response &response) override;
+		/// @brief get the power cycle count.
+		uint64_t powercicle();
 
+		/// @brief get the number of bad sectors (i.e. pending and reallocated).
+		Udjat::Temperature temperature();
 
-		virtual ~Agent();
+		/// @brief Is the disk awake?
+		bool is_awake();
+
+		/// @brief Is identify available?
+		bool identify_is_available();
+
+		std::string formattedSize();
 
 	};
+
 
  }
 

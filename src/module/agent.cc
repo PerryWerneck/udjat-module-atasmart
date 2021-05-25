@@ -30,6 +30,7 @@
 
  #include "private.h"
  #include <udjat/tools/quark.h>
+ #include <udjat/tools/disk.h>
  #include <udjat/state.h>
  #include <udjat/request.h>
 
@@ -58,21 +59,34 @@
 		setDefaultStates();
 	 }
 
-	 Agent::Agent(const char *n, const pugi::xml_node &node) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
+	 Agent::Agent(const char *n, const pugi::xml_node &node,bool name_from_xml) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
 		init();
-		load(node);
+		load(node,name_from_xml);
 		if(!hasStates()) {
 			setDefaultStates();
 		}
 	 }
 
 	 Agent::Agent(const pugi::xml_node &node)
-		: Agent(node.attribute("device-name").as_string(),node) {
+		: Agent(node.attribute("device-name").as_string(),node,true) {
 	 }
 
 	 void Agent::init() {
 
 		icon = "drive-harddisk";
+
+		if(!(this->label && *this->label)) {
+			string label{"Hard disk "};
+
+			const char * ptr = strrchr(this->name,'/');
+			if(ptr) {
+				label += (ptr+1);
+			} else {
+				label += name;
+			}
+
+			this->label = Quark(label).c_str();
+		}
 
 		// Get data from disk.
 
@@ -82,13 +96,13 @@
 
 			auto ipd = disk.read().identify();
 
-			string label{ipd->model};
+			string summary{ipd->model};
 
 			try {
 
 				string sz = disk.formattedSize();
 
-				label += "(" + sz + ")";
+				summary += " (" + sz + ")";
 
 			} catch(const std::exception &e) {
 
@@ -96,7 +110,7 @@
 
 			}
 
-			this->label = Quark(label).c_str();
+			this->summary = Quark(summary).c_str();
 
 		} catch(const std::exception &e) {
 
@@ -132,6 +146,22 @@
 			disk.read();
 
 			response["temperature"] = disk.temperature().to_string().c_str();
+			response["size"] = disk.formattedSize();
+
+			if(disk.identify_is_available()) {
+				auto ipd = disk.read().identify();
+				response["serial"] = ipd->serial;
+				response["firmware"] = ipd->firmware;
+				response["model"] = ipd->model;
+			} else {
+				response["serial"] = "";
+				response["firmware"] = "";
+				response["model"] = "";
+			}
+
+			response["badsectors"] = disk.badsectors();
+			// response["poweron"] = disk.poweron();
+			response["powercicle"] = disk.powercicle();
 
 		} catch(const exception &e) {
 
