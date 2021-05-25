@@ -153,7 +153,8 @@ $(BINRLS)/$(PACKAGE_NAME).so: \
 #---[ Install Targets ]------------------------------------------------------------------
 
 install: \
-	install-linux-module
+	install-linux-module \
+	install-conf
 
 install-linux-module: \
 	$(BINRLS)/$(PACKAGE_NAME).so
@@ -165,6 +166,15 @@ install-linux-module: \
 		$(BINRLS)/$(PACKAGE_NAME).so \
 		$(DESTDIR)@MODULE_PATH@/$(PACKAGE_NAME).so
 		
+install-conf:
+
+	@$(MKDIR) \
+		$(DESTDIR)$(sysconfdir)/udjat.conf.d
+		
+	@$(INSTALL_DATA) \
+		conf/50-smart.conf \
+		$(DESTDIR)$(sysconfdir)/udjat.conf.d		
+
 #---[ Uninstall Targets ]----------------------------------------------------------------
 
 uninstall: \
