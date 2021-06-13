@@ -60,7 +60,6 @@ CFLAGS= \
 	-DBUILD_DATE=`date +%Y%m%d` \
 	@UDJAT_CFLAGS@ \
 	@PUGIXML_CFLAGS@ \
-	@JSONCPP_CFLAGS@ \
 	@SMART_CFLAGS@
 
 LDFLAGS=\
@@ -70,7 +69,6 @@ LIBS= \
 	@LIBS@ \
 	@UDJAT_LIBS@ \
 	@PUGIXML_LIBS@ \
-	@JSONCPP_LIBS@ \
 	@SMART_LIBS@
 
 #---[ Debug Rules ]----------------------------------------------------------------------

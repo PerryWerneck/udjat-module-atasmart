@@ -84,7 +84,7 @@
 
 				Abstract::Agent::get(request,response);
 
-				Json::Value devices(Json::arrayValue);
+				Udjat::Value &devices = response["devices"];
 
 				for(auto child : *this) {
 
@@ -96,18 +96,14 @@
 					agent->Abstract::Agent::refresh(true);
 
 					// It's an smart agent, export it.
-					Json::Value device(Json::objectValue);
+					Udjat::Value &device = devices.append();
 
 					device["name"] = agent->getName();
 					device["device"] = agent->getDeviceName();
 					device["summary"] = agent->getSummary();
 					device["state"] = agent->getState()->getSummary();
 
-					devices.append(device);
-
 				}
-
-				response["devices"] = devices;
 
 			}
 
