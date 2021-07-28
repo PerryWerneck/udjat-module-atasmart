@@ -30,7 +30,7 @@
 
  #include "private.h"
  #include <udjat/tools/quark.h>
- #include <udjat/tools/disk.h>
+ #include <udjat/disk/device.h>
  #include <udjat/state.h>
  #include <udjat/request.h>
 
@@ -92,7 +92,7 @@
 
 		try {
 
-			Disk disk(name);
+			Disk::Device disk(name);
 
 			auto ipd = disk.read().identify();
 
@@ -125,7 +125,7 @@
 
 		try {
 
-			set(Disk(name).read().getOverral());
+			set(Disk::Device(name).read().getOverral());
 
 		} catch(const std::exception &e) {
 
@@ -142,7 +142,7 @@
 
 		try {
 
-			Disk disk(name);
+			Disk::Device disk(name);
 			disk.read();
 
 			response["temperature"] = disk.temperature().to_string().c_str();

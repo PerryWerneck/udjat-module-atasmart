@@ -20,48 +20,50 @@
  #pragma once
 
  #include <udjat/defs.h>
- #include <udjat/agent.h>
  #include <udjat/tools/temperature.h>
  #include <string>
  #include <atasmart.h>
 
  namespace Udjat {
 
-	/// @brief S.M.A.R.T. disk abstraction.
-	class UDJAT_API Disk {
-	private:
-		SkDisk *d;
+	namespace Disk {
 
-	public:
-		Disk(const char *name);
-		~Disk();
+		/// @brief S.M.A.R.T. disk abstraction.
+		class UDJAT_API Device {
+		private:
+			SkDisk *d;
 
-		Disk & read();
-		const SkIdentifyParsedData * identify();
-		SkSmartOverall getOverral();
+		public:
+			Device(const char *name);
+			~Device();
 
-		uint64_t size();
-		uint64_t badsectors();
+			Device & read();
+			const SkIdentifyParsedData * identify();
+			SkSmartOverall getOverral();
 
-		/// @brief get the power on time.
-		uint64_t poweron();
+			uint64_t size();
+			uint64_t badsectors();
 
-		/// @brief get the power cycle count.
-		uint64_t powercicle();
+			/// @brief get the power on time.
+			uint64_t poweron();
 
-		/// @brief get the number of bad sectors (i.e. pending and reallocated).
-		Udjat::Temperature temperature();
+			/// @brief get the power cycle count.
+			uint64_t powercicle();
 
-		/// @brief Is the disk awake?
-		bool is_awake();
+			/// @brief get the number of bad sectors (i.e. pending and reallocated).
+			Udjat::Temperature temperature();
 
-		/// @brief Is identify available?
-		bool identify_is_available();
+			/// @brief Is the disk awake?
+			bool is_awake();
 
-		std::string formattedSize();
+			/// @brief Is identify available?
+			bool identify_is_available();
 
-	};
+			std::string formattedSize();
 
+		};
+
+	}
 
  }
 
