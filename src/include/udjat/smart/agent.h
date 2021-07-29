@@ -20,9 +20,45 @@
  #pragma once
 
  #include <udjat/defs.h>
- #include <udjat/smart/agent.h>
+ #include <udjat/agent.h>
 
- using namespace std;
- using namespace Udjat;
+ namespace Udjat {
 
+	namespace Smart {
+
+		/// @brief S.M.A.R.T. agent.
+		class UDJAT_API Agent : public Udjat::Agent<unsigned short> {
+		private:
+			const char *name;
+
+			/// @brief Load default states.
+			void setDefaultStates();
+
+			/// @brief Initialize
+			void init();
+
+		public:
+
+			Agent(const char *name);
+			Agent(const pugi::xml_node &node);
+			Agent(const char *name, const pugi::xml_node &node, bool name_from_xml);
+			virtual ~Agent();
+
+			/// @brief Get device name.
+			inline const char * getDeviceName() const noexcept {
+				return this->name;
+			}
+
+			/// @brief Get device status, update internal state.
+			void refresh() override;
+
+			/// @brief Export device info.
+			void get(const Udjat::Request &request, Udjat::Response &response) override;
+
+
+		};
+
+	}
+
+ }
 

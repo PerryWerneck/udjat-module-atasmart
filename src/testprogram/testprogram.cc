@@ -20,7 +20,9 @@
  #include <udjat.h>
  #include <udjat/module.h>
  #include <udjat/tools/logger.h>
+ #include <udjat/disk/stat.h>
  #include <unistd.h>
+ #include <list>
 
  using namespace std;
  using namespace Udjat;

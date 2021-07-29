@@ -26,18 +26,18 @@
 
  namespace Udjat {
 
-	namespace Disk {
+	namespace Smart {
 
 		/// @brief S.M.A.R.T. disk abstraction.
-		class UDJAT_API Device {
+		class UDJAT_API Disk {
 		private:
 			SkDisk *d;
 
 		public:
-			Device(const char *name);
-			~Device();
+			Disk(const char *name);
+			~Disk();
 
-			Device & read();
+			Disk & read();
 			const SkIdentifyParsedData * identify();
 			SkSmartOverall getOverral();
 

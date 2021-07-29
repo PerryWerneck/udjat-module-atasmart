@@ -30,14 +30,13 @@
 
  #include "private.h"
  #include <udjat/tools/quark.h>
- #include <udjat/disk/device.h>
+ #include <udjat/smart/disk.h>
  #include <udjat/state.h>
  #include <udjat/request.h>
 
- using namespace std;
  using Udjat::Quark;
 
- namespace Smart {
+ namespace Udjat {
 
 	 static const char * getAgentName(const char * devname) {
 
@@ -54,12 +53,12 @@
 
 	 }
 
-	 Agent::Agent(const char *n) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
+	 Smart::Agent::Agent(const char *n) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
 		init();
 		setDefaultStates();
 	 }
 
-	 Agent::Agent(const char *n, const pugi::xml_node &node,bool name_from_xml) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
+	 Smart::Agent::Agent(const char *n, const pugi::xml_node &node,bool name_from_xml) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
 		init();
 		load(node,name_from_xml);
 		if(!hasStates()) {
@@ -67,11 +66,11 @@
 		}
 	 }
 
-	 Agent::Agent(const pugi::xml_node &node)
+	 Smart::Agent::Agent(const pugi::xml_node &node)
 		: Agent(node.attribute("device-name").as_string(),node,true) {
 	 }
 
-	 void Agent::init() {
+	 void Smart::Agent::init() {
 
 		icon = "drive-harddisk";
 
@@ -92,7 +91,7 @@
 
 		try {
 
-			Disk::Device disk(name);
+			Smart::Disk disk(name);
 
 			auto ipd = disk.read().identify();
 
@@ -121,11 +120,11 @@
 	}
 
 	/// @brief Get device status, update internal state.
-	void Agent::refresh() {
+	void Smart::Agent::refresh() {
 
 		try {
 
-			set(Disk::Device(name).read().getOverral());
+			set(Smart::Disk(name).read().getOverral());
 
 		} catch(const std::exception &e) {
 
@@ -136,13 +135,13 @@
 	}
 
 	/// @brief Export device info.
-	void Agent::get(const Udjat::Request &request, Udjat::Response &response) {
+	void Smart::Agent::get(const Udjat::Request &request, Udjat::Response &response) {
 
 		Udjat::Abstract::Agent::get(request,response);
 
 		try {
 
-			Disk::Device disk(name);
+			Smart::Disk disk(name);
 			disk.read();
 
 			response["temperature"] = disk.temperature().to_string().c_str();
@@ -171,10 +170,10 @@
 
 	}
 
-	Agent::~Agent() {
+	Smart::Agent::~Agent() {
 	}
 
-	void Agent::setDefaultStates() {
+	void Smart::Agent::setDefaultStates() {
 
 		static const struct {
 			unsigned int					  value;		///< @brief Agent value for the state.

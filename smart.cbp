@@ -32,12 +32,13 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="src/include/udjat/disk/device.h" />
-		<Unit filename="src/include/udjat/disk/stat.h" />
+		<Unit filename="src/include/udjat/smart/agent.h" />
+		<Unit filename="src/include/udjat/smart/device.h" />
 		<Unit filename="src/module/agent.cc" />
 		<Unit filename="src/module/disk.cc" />
 		<Unit filename="src/module/init.cc" />
 		<Unit filename="src/module/private.h" />
+		<Unit filename="src/module/stat.cc" />
 		<Unit filename="src/module/temperature.cc" />
 		<Unit filename="src/testprogram/testprogram.cc" />
 		<Extensions />

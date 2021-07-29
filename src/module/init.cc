@@ -20,6 +20,7 @@
  #include <config.h>
  #include <udjat/module.h>
  #include <udjat/factory.h>
+ #include <udjat/disk/stat.h>
  #include <unistd.h>
  #include <fstream>
  #include "private.h"
@@ -46,15 +47,24 @@
 	void parse(Udjat::Abstract::Agent &parent, const pugi::xml_node &node) const override {
 
 		/// @brief Container with all disks
-		class Container : public Abstract::Agent {
+		class PhysicalDisks : public Abstract::Agent {
 		public:
-			Container(const pugi::xml_node &node) : Abstract::Agent("storage") {
+			PhysicalDisks(const pugi::xml_node &node) : Abstract::Agent("storage") {
 
 				icon = "drive-multidisk";
 				label = "Physical disks";
 				load(node);
 
 				// Load disks
+				for(Disk::Stat &disk : Disk::Stat::get()) {
+
+					if(disk.minor == 0 && !disk.name.empty()) {
+						this->insert(make_shared<Smart::Agent>((string{"/dev/"} + disk.name).c_str(),node,false));
+					}
+
+				}
+
+				/*
 				std::ifstream proc("/proc/partitions");
 
 				string dunno;
@@ -69,14 +79,15 @@
 					proc >> major >> minor >> blocks >> name;
 
 					if(minor == 0 && !name.empty()) {
-						this->insert(make_shared<Smart::Agent>((string{"/dev/"} + name).c_str(),node,false));
+						this->insert(make_shared<Disk::Agent>((string{"/dev/"} + name).c_str(),node,false));
 					}
 
 				} while(!proc.eof());
+				*/
 
 			}
 
-			virtual ~Container() {
+			virtual ~PhysicalDisks() {
 			}
 
 			/// @brief Export device info.
@@ -118,8 +129,8 @@
 
 		} else {
 
-			// No device name, create a container with all detected devices.
-			parent.insert(make_shared<Container>(node));
+			// No device name, create a container with all physical disks.
+			parent.insert(make_shared<PhysicalDisks>(node));
 
 		}
 

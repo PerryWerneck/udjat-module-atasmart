@@ -19,14 +19,14 @@
 
  #include "private.h"
  #include <udjat/tools/temperature.h>
- #include <udjat/disk/device.h>
+ #include <udjat/smart/disk.h>
  #include <udjat/tools/configuration.h>
 
  using namespace std;
 
  namespace Udjat {
 
-	 Disk::Device::Device(const char *name) : d(nullptr) {
+	 Smart::Disk::Disk(const char *name) : d(nullptr) {
 
 		if(sk_disk_open(name, &d) < 0) {
 			throw system_error(errno, system_category(), string{"Can't open "} + name);
@@ -34,11 +34,11 @@
 
 	 }
 
-	 Disk::Device::~Device() {
+	 Smart::Disk::~Disk() {
 		sk_disk_free(d);
 	 }
 
-	 Disk::Device & Disk::Device::read() {
+	 Smart::Disk & Smart::Disk::read() {
 
 		// TODO: Reading SMART data might cause the disk to wake up from sleep. Hence from monitoring daemons make sure to call sk_disk_check_power_mode() to check wether the disk is sleeping and skip the read if so
 
@@ -48,7 +48,7 @@
 		return *this;
 	 }
 
-	bool Disk::Device::identify_is_available() {
+	bool Smart::Disk::identify_is_available() {
 
 		SkBool available = 0;
 
@@ -60,7 +60,7 @@
 
 	}
 
-	const SkIdentifyParsedData * Disk::Device::identify() {
+	const SkIdentifyParsedData * Smart::Disk::identify() {
 		const SkIdentifyParsedData *ipd;
 		if(sk_disk_identify_parse(d, &ipd) < 0) {
 			throw system_error(errno, system_category(), "Can't parse S.M.A.R.T. identify");
@@ -68,7 +68,7 @@
 		return ipd;
 	}
 
-	SkSmartOverall Disk::Device::getOverral() {
+	SkSmartOverall Smart::Disk::getOverral() {
 
 		SkSmartOverall overall;
 
@@ -80,7 +80,7 @@
 
 	}
 
-	bool Disk::Device::is_awake() {
+	bool Smart::Disk::is_awake() {
 		SkBool awake = 0;
 
 		if(sk_disk_check_sleep_mode(d,&awake) < 0) {
@@ -91,7 +91,7 @@
 
 	}
 
-	uint64_t Disk::Device::size() {
+	uint64_t Smart::Disk::size() {
 
 		uint64_t value;
 
@@ -103,7 +103,7 @@
 
 	}
 
-	uint64_t Disk::Device::badsectors() {
+	uint64_t Smart::Disk::badsectors() {
 
 		uint64_t value;
 
@@ -115,7 +115,7 @@
 
 	}
 
-	uint64_t Disk::Device::poweron() {
+	uint64_t Smart::Disk::poweron() {
 
 		uint64_t mseconds;
 
@@ -127,7 +127,7 @@
 
 	}
 
-	uint64_t Disk::Device::powercicle() {
+	uint64_t Smart::Disk::powercicle() {
 
 		uint64_t value;
 
@@ -139,7 +139,7 @@
 
 	}
 
-	Temperature Disk::Device::temperature() {
+	Temperature Smart::Disk::temperature() {
 
 		uint64_t value;
 		if(sk_disk_smart_get_temperature(d,&value) < 0) {
@@ -156,7 +156,7 @@
 		return temperature;
 	}
 
-	string Disk::Device::formattedSize() {
+	string Smart::Disk::formattedSize() {
 
 		static const struct {
 			uint64_t value;
