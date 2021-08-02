@@ -32,7 +32,7 @@
 static void agent_test() {
 
 	for(auto agent : *Abstract::Agent::init("${PWD}/test.xml")) {
-		cout << "http://localhost:8989/api/1.0/agent/" << agent->getName() << endl;
+		cout << "http://localhost:8989/api/1.0/agent/" << agent->getName() << ".xml" << endl;
 	}
 
 	cout << "Waiting for requests" << endl;

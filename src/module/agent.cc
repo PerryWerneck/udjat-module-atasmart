@@ -120,7 +120,7 @@
 	}
 
 	/// @brief Get device status, update internal state.
-	void Smart::Agent::refresh() {
+	bool Smart::Agent::refresh() {
 
 		try {
 
@@ -131,6 +131,8 @@
 			failed( (string{"Can't get overall state of "} + name).c_str(), e);
 
 		}
+
+		return true;
 
 	}
 

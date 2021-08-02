@@ -50,7 +50,7 @@
 			}
 
 			/// @brief Get device status, update internal state.
-			void refresh() override;
+			bool refresh() override;
 
 			/// @brief Export device info.
 			void get(const Udjat::Request &request, Udjat::Response &response) override;

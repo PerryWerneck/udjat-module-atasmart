@@ -44,7 +44,7 @@
  	virtual ~Module() {
  	}
 
-	void parse(Udjat::Abstract::Agent &parent, const pugi::xml_node &node) const override {
+	bool parse(Udjat::Abstract::Agent &parent, const pugi::xml_node &node) const override {
 
 		/// @brief Container with all disks
 		class PhysicalDisks : public Abstract::Agent {
@@ -63,27 +63,6 @@
 					}
 
 				}
-
-				/*
-				std::ifstream proc("/proc/partitions");
-
-				string dunno;
-				getline(proc,dunno);
-
-				do {
-
-					uint16_t major, minor;
-					int blocks;
-					string name;
-
-					proc >> major >> minor >> blocks >> name;
-
-					if(minor == 0 && !name.empty()) {
-						this->insert(make_shared<Disk::Agent>((string{"/dev/"} + name).c_str(),node,false));
-					}
-
-				} while(!proc.eof());
-				*/
 
 			}
 
@@ -133,6 +112,8 @@
 			parent.insert(make_shared<PhysicalDisks>(node));
 
 		}
+
+		return true;
 
 	}
 
