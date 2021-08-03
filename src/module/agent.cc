@@ -33,12 +33,14 @@
  #include <udjat/smart/disk.h>
  #include <udjat/state.h>
  #include <udjat/request.h>
+ #include <udjat/disk/stat.h>
+ #include <sys/time.h>
 
  using Udjat::Quark;
 
  namespace Udjat {
 
-	 static const char * getAgentName(const char * devname) {
+	static const char * getAgentName(const char * devname) {
 
 		if(devname && *devname) {
 
@@ -51,26 +53,57 @@
 
 		throw runtime_error("Missing required attribute 'device-name'");
 
-	 }
+	}
 
-	 Smart::Agent::Agent(const char *n) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
+	static unsigned long getCurrentTime() {
+
+		::timeval tv;
+
+		if(gettimeofday(&tv, NULL) < 0) {
+			throw system_error(errno,system_category(),"Cant get time of day");
+		}
+
+		return (tv.tv_sec * 1000) + (tv.tv_usec /1000);
+
+	}
+
+	Smart::Agent::Agent(const char *n) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
 		init();
 		setDefaultStates();
-	 }
+	}
 
-	 Smart::Agent::Agent(const char *n, const pugi::xml_node &node,bool name_from_xml) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
+	Smart::Agent::Agent(const char *n, const pugi::xml_node &node,bool name_from_xml) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
+
 		init();
 		load(node,name_from_xml);
+
+		stats.enabled = Attribute(node,"diskstats",true).as_bool(false);
+
+#ifdef DEBUG
+		info("diskstats is '{}'", stats.enabled ? "enabled" : "disabled");
+#endif // DEBUG
+
 		if(!hasStates()) {
 			setDefaultStates();
 		}
-	 }
 
-	 Smart::Agent::Agent(const pugi::xml_node &node)
+		if(stats.enabled) {
+			Udjat::Disk::Stat stat(name);
+
+			float blocksize = (float) stat.getBlockSize();
+			stats.saved.timestamp = getCurrentTime();
+			stats.saved.read += (((float) stat.read.blocks) * blocksize);
+			stats.saved.write += (((float) stat.write.blocks) * blocksize);
+
+		}
+
+	}
+
+	Smart::Agent::Agent(const pugi::xml_node &node)
 		: Agent(node.attribute("device-name").as_string(),node,true) {
-	 }
+	}
 
-	 void Smart::Agent::init() {
+	void Smart::Agent::init() {
 
 		icon = "drive-harddisk";
 
@@ -126,9 +159,36 @@
 
 			set(Smart::Disk(name).read().getOverral());
 
+
 		} catch(const std::exception &e) {
 
 			failed( (string{"Can't get overall state of "} + name).c_str(), e);
+
+		}
+
+		if(stats.enabled) {
+
+			Udjat::Disk::Stat stat(name);
+
+			unsigned long now	= getCurrentTime();
+			unsigned long msec = (now - stats.saved.timestamp);
+
+			if(msec == 0) {
+
+				stats.read = stats.write = 0;
+
+			} else {
+
+				float blocksize = (float) stat.getBlockSize();
+
+				stats.read = ((((float) stat.read.blocks) * blocksize) - stats.saved.read) / ((float) msec / 1000);
+				stats.write = ((((float) stat.write.blocks) * blocksize) - stats.saved.write) / ((float) msec / 1000);
+
+				stats.saved.timestamp = now;
+				stats.saved.read = stats.read;
+				stats.saved.write = stats.write;
+
+			}
 
 		}
 

@@ -37,6 +37,21 @@
 			/// @brief Initialize
 			void init();
 
+			/// @brief I/O statistics
+			struct {
+				bool enabled = false;		///< @brief Update I/O stats.
+
+				struct {
+					unsigned long timestamp = 0;
+					float read  = 0;
+					float write = 0;
+				} saved;
+
+				float read  = 0;
+				float write = 0;
+
+			} stats;
+
 		public:
 
 			Agent(const char *name);
