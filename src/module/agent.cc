@@ -55,6 +55,7 @@
 
 	}
 
+	/*
 	static unsigned long getCurrentTime() {
 
 		::timeval tv;
@@ -66,6 +67,7 @@
 		return (tv.tv_sec * 1000) + (tv.tv_usec /1000);
 
 	}
+	*/
 
 	Smart::Agent::Agent(const char *n) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
 		init();
@@ -77,23 +79,14 @@
 		init();
 		load(node,name_from_xml);
 
-		stats.enabled = Attribute(node,"diskstats",true).as_bool(false);
-
-#ifdef DEBUG
-		info("diskstats is '{}'", stats.enabled ? "enabled" : "disabled");
-#endif // DEBUG
-
 		if(!hasStates()) {
 			setDefaultStates();
 		}
 
-		if(stats.enabled) {
-			Udjat::Disk::Stat stat(name);
+		if(Attribute(node,"diskstats",true).as_bool(false)) {
 
-			float blocksize = (float) stat.getBlockSize();
-			stats.saved.timestamp = getCurrentTime();
-			stats.saved.read += (((float) stat.read.blocks) * blocksize);
-			stats.saved.write += (((float) stat.write.blocks) * blocksize);
+			unit = Udjat::Disk::Unit::get(node);
+			Udjat::Disk::Stat(name).reset(stats);
 
 		}
 
@@ -166,30 +159,12 @@
 
 		}
 
-		if(stats.enabled) {
+		if(unit) {
+			Udjat::Disk::Stat(name).compute(stats);
 
-			Udjat::Disk::Stat stat(name);
-
-			unsigned long now	= getCurrentTime();
-			unsigned long msec = (now - stats.saved.timestamp);
-
-			if(msec == 0) {
-
-				stats.read = stats.write = 0;
-
-			} else {
-
-				float blocksize = (float) stat.getBlockSize();
-
-				stats.read = ((((float) stat.read.blocks) * blocksize) - stats.saved.read) / ((float) msec / 1000);
-				stats.write = ((((float) stat.write.blocks) * blocksize) - stats.saved.write) / ((float) msec / 1000);
-
-				stats.saved.timestamp = now;
-				stats.saved.read = stats.read;
-				stats.saved.write = stats.write;
-
-			}
-
+#ifdef DEBUG
+			info("Read={} Write={}",stats.read / unit->value, stats.write / unit->value);
+#endif // DEBUG
 		}
 
 		return true;
@@ -223,6 +198,11 @@
 			response["badsectors"] = disk.badsectors();
 			// response["poweron"] = disk.poweron();
 			response["powercicle"] = disk.powercicle();
+
+			if(unit) {
+				response["read"] = stats.read / unit->value;
+				response["write"] = stats.write / unit->value;
+			}
 
 		} catch(const exception &e) {
 

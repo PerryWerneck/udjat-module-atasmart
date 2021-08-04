@@ -21,6 +21,7 @@
 
  #include <udjat/defs.h>
  #include <udjat/agent.h>
+ #include <udjat/disk/stat.h>
 
  namespace Udjat {
 
@@ -37,20 +38,11 @@
 			/// @brief Initialize
 			void init();
 
-			/// @brief I/O statistics
-			struct {
-				bool enabled = false;		///< @brief Update I/O stats.
+			/// @brief I/O unit (nullptr if disabled).
+			const Disk::Unit *unit = nullptr;
 
-				struct {
-					unsigned long timestamp = 0;
-					float read  = 0;
-					float write = 0;
-				} saved;
-
-				float read  = 0;
-				float write = 0;
-
-			} stats;
+			/// @brief I/O statistics.
+			Disk::Stat::Data stats;
 
 		public:
 
