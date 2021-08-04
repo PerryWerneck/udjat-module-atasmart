@@ -4,7 +4,7 @@
 
 	<!-- atasmart device-name='/dev/sda' / -->
 
-	<atasmart name='sda' device-name='/dev/sda' diskstats='true' update-timer='1' />
+	<atasmart name='sda' device-name='/dev/sda' diskstats='true' update-timer='5' />
 
 	<!-- atasmart name='storage' diskstats='true' update-timer='1' / -->
 	
