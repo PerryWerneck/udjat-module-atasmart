@@ -21,7 +21,7 @@
 
  #include <udjat/defs.h>
  #include <udjat/agent.h>
- #include <udjat/disk/stat.h>
+ #include <udjat/tools/disk/stat.h>
 
  namespace Udjat {
 

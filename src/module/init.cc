@@ -20,7 +20,7 @@
  #include <config.h>
  #include <udjat/module.h>
  #include <udjat/factory.h>
- #include <udjat/disk/stat.h>
+ #include <udjat/tools/disk/stat.h>
  #include <unistd.h>
  #include <fstream>
  #include "private.h"

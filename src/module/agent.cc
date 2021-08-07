@@ -33,7 +33,7 @@
  #include <udjat/smart/disk.h>
  #include <udjat/state.h>
  #include <udjat/request.h>
- #include <udjat/disk/stat.h>
+ #include <udjat/tools/disk/stat.h>
  #include <sys/time.h>
 
  using Udjat::Quark;
@@ -54,20 +54,6 @@
 		throw runtime_error("Missing required attribute 'device-name'");
 
 	}
-
-	/*
-	static unsigned long getCurrentTime() {
-
-		::timeval tv;
-
-		if(gettimeofday(&tv, NULL) < 0) {
-			throw system_error(errno,system_category(),"Cant get time of day");
-		}
-
-		return (tv.tv_sec * 1000) + (tv.tv_usec /1000);
-
-	}
-	*/
 
 	Smart::Agent::Agent(const char *n) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
 		init();

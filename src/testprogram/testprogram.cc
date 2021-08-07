@@ -20,7 +20,7 @@
  #include <udjat.h>
  #include <udjat/module.h>
  #include <udjat/tools/logger.h>
- #include <udjat/disk/stat.h>
+ #include <udjat/tools/disk/stat.h>
  #include <unistd.h>
  #include <list>
 
