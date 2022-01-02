@@ -21,6 +21,7 @@
  #include <udjat/module.h>
  #include <udjat/tools/logger.h>
  #include <udjat/tools/disk/stat.h>
+ #include <udjat/tools/mainloop.h>
  #include <unistd.h>
  #include <list>
 
@@ -36,7 +37,7 @@ static void agent_test() {
 	}
 
 	cout << "Waiting for requests" << endl;
-	Udjat::run();
+	Udjat::MainLoop::getInstance().run();
 
 	Abstract::Agent::deinit();
 
