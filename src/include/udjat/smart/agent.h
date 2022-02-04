@@ -30,7 +30,7 @@
 		/// @brief S.M.A.R.T. agent.
 		class UDJAT_API Agent : public Udjat::Agent<unsigned short> {
 		private:
-			const char *name;
+			const char *devicename;
 
 			/// @brief Load default states.
 			void setDefaultStates();
@@ -53,7 +53,7 @@
 
 			/// @brief Get device name.
 			inline const char * getDeviceName() const noexcept {
-				return this->name;
+				return this->devicename;
 			}
 
 			/// @brief Get device status, update internal state.

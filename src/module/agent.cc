@@ -55,12 +55,12 @@
 
 	}
 
-	Smart::Agent::Agent(const char *n) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
+	Smart::Agent::Agent(const char *n) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), devicename(Quark(n).c_str()) {
 		init();
 		setDefaultStates();
 	}
 
-	Smart::Agent::Agent(const char *n, const pugi::xml_node &node,bool name_from_xml) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
+	Smart::Agent::Agent(const char *n, const pugi::xml_node &node,bool name_from_xml) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), devicename(Quark(n).c_str()) {
 
 		init();
 		load(node,name_from_xml);
@@ -72,7 +72,7 @@
 		if(Attribute(node,"diskstats",true).as_bool(false)) {
 
 			unit = Udjat::Disk::Unit::get(node);
-			Udjat::Disk::Stat(name).reset(stats);
+			Udjat::Disk::Stat(devicename).reset(stats);
 
 		}
 
@@ -84,26 +84,26 @@
 
 	void Smart::Agent::init() {
 
-		icon = "drive-harddisk";
+		Object::properties.icon = "drive-harddisk";
 
-		if(!(this->label && *this->label)) {
+		if(!(Object::properties.label && *Object::properties.label)) {
 			string label{"Hard disk "};
 
-			const char * ptr = strrchr(this->name,'/');
+			const char * ptr = strrchr(this->devicename,'/');
 			if(ptr) {
 				label += (ptr+1);
 			} else {
-				label += name;
+				label += devicename;
 			}
 
-			this->label = Quark(label).c_str();
+			Object::properties.label = Quark(label).c_str();
 		}
 
 		// Get data from disk.
 
 		try {
 
-			Smart::Disk disk(name);
+			Smart::Disk disk(devicename);
 
 			auto ipd = disk.read().identify();
 
@@ -117,15 +117,15 @@
 
 			} catch(const std::exception &e) {
 
-				cerr << name << "\t" << e.what();
+				error() << e.what();
 
 			}
 
-			this->summary = Quark(summary).c_str();
+			Object::properties.summary = Quark(summary).c_str();
 
 		} catch(const std::exception &e) {
 
-			error("Error '{}' getting device information",e.what());
+			error() << Logger::Message("Error '{}' getting device information",e);
 
 		}
 
@@ -136,20 +136,20 @@
 
 		try {
 
-			set(Smart::Disk(name).read().getOverral());
+			set(Smart::Disk(devicename).read().getOverral());
 
 
 		} catch(const std::exception &e) {
 
-			failed( (string{"Can't get overall state of "} + name).c_str(), e);
+			failed( (string{"Can't get overall state of "} + devicename).c_str(), e);
 
 		}
 
 		if(unit) {
-			Udjat::Disk::Stat(name).compute(stats);
+			Udjat::Disk::Stat(devicename).compute(stats);
 
 #ifdef DEBUG
-			info("Read={} Write={}",stats.read / unit->value, stats.write / unit->value);
+			info() << "Read=" << (stats.read / unit->value) << " Write=" << (stats.write / unit->value) << endl;
 #endif // DEBUG
 		}
 
@@ -164,7 +164,7 @@
 
 		try {
 
-			Smart::Disk disk(name);
+			Smart::Disk disk(devicename);
 			disk.read();
 
 			response["temperature"] = disk.temperature().to_string().c_str();
@@ -192,7 +192,7 @@
 
 		} catch(const exception &e) {
 
-			error("Error '{}' getting device info",e.what());
+			error() << "Error '" << e.what() << "' getting device info" << endl;
 
 		}
 
@@ -215,64 +215,58 @@
 				SK_SMART_OVERALL_GOOD,
 				"good",
 				Udjat::ready,
-				"${agent.name} Health is Good",
+				"${name} Health is Good",
 				""
 			},
 			{
 				SK_SMART_OVERALL_BAD_ATTRIBUTE_IN_THE_PAST,
 				"badonthepast",
 				Udjat::ready,
-				"Pre fail in the past on ${agent.name}",
-				"At least one pre-fail attribute exceeded its threshold in the past on ${agent.name}"
+				"Pre fail in the past on ${name}",
+				"At least one pre-fail attribute exceeded its threshold in the past on ${name}"
 			},
 			{
 				SK_SMART_OVERALL_BAD_SECTOR,
 				"badsector",
 				Udjat::warning,
 				"Bad sector on ${name}",
-				"At least one bad sector on ${agent.name}"
+				"At least one bad sector on ${name}"
 			},
 			{
 				SK_SMART_OVERALL_BAD_ATTRIBUTE_NOW,
 				"badattribute",
 				Udjat::error,
 				"Pre fail exceeded on ${name}",
-				"At least one pre-fail attribute is exceeding its threshold now on ${agent.name}"
+				"At least one pre-fail attribute is exceeding its threshold now on ${name}"
 			},
 			{
 				SK_SMART_OVERALL_BAD_SECTOR_MANY,
 				"manybad",
 				Udjat::error,
-				"Many bad sectors on ${agent.name}",
+				"Many bad sectors on ${name}",
 				""
 			},
 			{
 				SK_SMART_OVERALL_BAD_STATUS,
 				"badstatus",
 				Udjat::error,
-				"Smart Self Assessment negative on ${agent.name}",
+				"Smart Self Assessment negative on ${name}",
 				""
 			},
 
 		};
 
-		cout << this->getName() << "\tUsing default states" << endl;
+		info() << "Using default states" << endl;
 
 		for(size_t ix = 0; ix < (sizeof(states)/ sizeof(states[0])); ix++) {
-
-			string summary(states[ix].summary);
-			string body(states[ix].body);
-
-			expand(summary);
-			expand(body);
 
 			push_back(
 				make_shared<Udjat::State<unsigned short>>(
 					states[ix].name,
 					states[ix].value,
 					states[ix].level,
-					Quark(summary).c_str(),
-					Quark(body).c_str()
+					Quark(expand(states[ix].summary)).c_str(),
+					Quark(expand(states[ix].body)).c_str()
 				)
 			);
 

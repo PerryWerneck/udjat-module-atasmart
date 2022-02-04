@@ -51,8 +51,8 @@
 		public:
 			PhysicalDisks(const pugi::xml_node &node) : Abstract::Agent("storage") {
 
-				icon = "drive-multidisk";
-				label = "Physical disks";
+				Object::properties.icon = "drive-multidisk";
+				Object::properties.label = "Physical disks";
 				load(node);
 
 				// Load disks
@@ -88,10 +88,10 @@
 					// It's an smart agent, export it.
 					Udjat::Value &device = devices.append();
 
-					device["name"] = agent->getName();
+					device["name"] = agent->name();
 					device["device"] = agent->getDeviceName();
-					device["summary"] = agent->getSummary();
-					device["state"] = agent->getState()->getSummary();
+					device["summary"] = agent->summary();
+					device["state"] = agent->getState()->summary();
 
 				}
 
