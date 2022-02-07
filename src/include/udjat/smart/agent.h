@@ -48,7 +48,7 @@
 
 			Agent(const char *name);
 			Agent(const pugi::xml_node &node);
-			Agent(const char *name, const pugi::xml_node &node, bool name_from_xml);
+			Agent(const char *name, const pugi::xml_node &node);
 			virtual ~Agent();
 
 			/// @brief Get device name.

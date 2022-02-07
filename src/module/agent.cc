@@ -60,10 +60,10 @@
 		setDefaultStates();
 	}
 
-	Smart::Agent::Agent(const char *n, const pugi::xml_node &node,bool name_from_xml) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), devicename(Quark(n).c_str()) {
+	Smart::Agent::Agent(const char *n, const pugi::xml_node &node) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), devicename(Quark(n).c_str()) {
 
 		init();
-		load(node,name_from_xml);
+		load(node);
 
 		if(!hasStates()) {
 			setDefaultStates();
@@ -79,7 +79,7 @@
 	}
 
 	Smart::Agent::Agent(const pugi::xml_node &node)
-		: Agent(node.attribute("device-name").as_string(),node,true) {
+		: Agent(node.attribute("device-name").as_string(),node) {
 	}
 
 	void Smart::Agent::init() {

@@ -59,7 +59,7 @@
 				for(Disk::Stat &disk : Disk::Stat::get()) {
 
 					if(disk.minor == 0 && !disk.name.empty()) {
-						this->insert(make_shared<Smart::Agent>((string{"/dev/"} + disk.name).c_str(),node,false));
+						this->insert(make_shared<Smart::Agent>((string{"/dev/"} + disk.name).c_str(),node));
 					}
 
 				}
@@ -104,7 +104,7 @@
 		if(*devname) {
 
 			// Has device name, create a device node.
-			parent.insert(make_shared<Smart::Agent>(devname,node,true));
+			parent.insert(make_shared<Smart::Agent>(devname,node));
 
 		} else {
 
