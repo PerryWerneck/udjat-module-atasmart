@@ -91,7 +91,7 @@
 					device["name"] = agent->name();
 					device["device"] = agent->getDeviceName();
 					device["summary"] = agent->summary();
-					device["state"] = agent->getState()->summary();
+					device["state"] = agent->state()->summary();
 
 				}
 
