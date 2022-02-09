@@ -19,6 +19,7 @@
 
  #include <config.h>
  #include <udjat/module.h>
+ #include <udjat/moduleinfo.h>
  #include <udjat/factory.h>
  #include <udjat/tools/disk/stat.h>
  #include <unistd.h>
@@ -27,18 +28,12 @@
 
  using namespace std;
 
- static const Udjat::ModuleInfo moduleinfo{
-	PACKAGE_NAME,								// The module name.
-	"ATA S.M.A.R.T. Disk Health Monitoring", 	// The module description.
-	PACKAGE_VERSION, 							// The module version.
-	PACKAGE_URL, 								// The package URL.
-	PACKAGE_BUGREPORT 							// The bug report address.
- };
+ static const Udjat::ModuleInfo moduleinfo{"ATA S.M.A.R.T. Disk Health Monitor"};
 
  class Module : public Udjat::Module, Udjat::Factory {
  public:
 
- 	Module() : Udjat::Module("atasmart",&moduleinfo), Udjat::Factory("atasmart",&moduleinfo) {
+ 	Module() : Udjat::Module("atasmart",moduleinfo), Udjat::Factory("atasmart",moduleinfo) {
  	};
 
  	virtual ~Module() {
