@@ -39,7 +39,7 @@
  	virtual ~Module() {
  	}
 
-	bool parse(Udjat::Abstract::Agent &parent, const pugi::xml_node &node) const override {
+	std::shared_ptr<Abstract::Agent> AgentFactory(const Abstract::Object &parent, const pugi::xml_node &node) const override {
 
 		/// @brief Container with all disks
 		class PhysicalDisks : public Abstract::Agent {
@@ -99,16 +99,12 @@
 		if(*devname) {
 
 			// Has device name, create a device node.
-			parent.insert(make_shared<Smart::Agent>(devname,node));
-
-		} else {
-
-			// No device name, create a container with all physical disks.
-			parent.insert(make_shared<PhysicalDisks>(node));
+			return  make_shared<Smart::Agent>(devname,node);
 
 		}
 
-		return true;
+		// No device name, create a container with all physical disks.
+		return make_shared<PhysicalDisks>(node);
 
 	}
 

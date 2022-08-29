@@ -31,7 +31,8 @@
  #include "private.h"
  #include <udjat/tools/quark.h>
  #include <udjat/smart/disk.h>
- #include <udjat/state.h>
+ #include <udjat/tools/logger.h>
+ #include <udjat/tools/intl.h>
  #include <udjat/request.h>
  #include <udjat/tools/disk/stat.h>
  #include <sys/time.h>
@@ -65,7 +66,7 @@
 		init();
 		load(node);
 
-		if(!hasStates()) {
+		if(!states.empty()) {
 			setDefaultStates();
 		}
 
@@ -125,7 +126,7 @@
 
 		} catch(const std::exception &e) {
 
-			error() << Logger::Message("Error '{}' getting device information",e);
+			error() << Logger::Message("Error '{}' getting device information",e) << endl;
 
 		}
 
@@ -215,42 +216,42 @@
 				SK_SMART_OVERALL_GOOD,
 				"good",
 				Udjat::ready,
-				"${name} Health is Good",
+				N_( "${name} Health is Good" ),
 				""
 			},
 			{
 				SK_SMART_OVERALL_BAD_ATTRIBUTE_IN_THE_PAST,
 				"badonthepast",
 				Udjat::ready,
-				"Pre fail in the past on ${name}",
-				"At least one pre-fail attribute exceeded its threshold in the past on ${name}"
+				N_( "Pre fail in the past on ${name}" ),
+				N_( "At least one pre-fail attribute exceeded its threshold in the past on ${name}" )
 			},
 			{
 				SK_SMART_OVERALL_BAD_SECTOR,
 				"badsector",
 				Udjat::warning,
-				"Bad sector on ${name}",
-				"At least one bad sector on ${name}"
+				N_( "Bad sector on ${name}" ),
+				N_( "At least one bad sector on ${name}" )
 			},
 			{
 				SK_SMART_OVERALL_BAD_ATTRIBUTE_NOW,
 				"badattribute",
 				Udjat::error,
-				"Pre fail exceeded on ${name}",
-				"At least one pre-fail attribute is exceeding its threshold now on ${name}"
+				N_( "Pre fail exceeded on ${name}" ),
+				N_( "At least one pre-fail attribute is exceeding its threshold now on ${name}" )
 			},
 			{
 				SK_SMART_OVERALL_BAD_SECTOR_MANY,
 				"manybad",
 				Udjat::error,
-				"Many bad sectors on ${name}",
+				N_( "Too many bad sectors on ${name}" ),
 				""
 			},
 			{
 				SK_SMART_OVERALL_BAD_STATUS,
 				"badstatus",
 				Udjat::error,
-				"Smart Self Assessment negative on ${name}",
+				N_( "Smart Self Assessment negative on ${name}" ),
 				""
 			},
 
@@ -260,13 +261,18 @@
 
 		for(size_t ix = 0; ix < (sizeof(states)/ sizeof(states[0])); ix++) {
 
-			push_back(
+			this->states.push_back(
 				make_shared<Udjat::State<unsigned short>>(
 					states[ix].name,
 					states[ix].value,
 					states[ix].level,
+#ifdef GETTEXT_PACKAGE
+					Quark(expand(dgettext(GETTEXT_PACKAGE,states[ix].summary))).c_str(),
+					Quark(expand(dgettext(GETTEXT_PACKAGE,states[ix].body))).c_str()
+#else
 					Quark(expand(states[ix].summary)).c_str(),
 					Quark(expand(states[ix].body)).c_str()
+#endif // GETTEXT_PACKAGE
 				)
 			);
 

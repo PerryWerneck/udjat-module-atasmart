@@ -2,6 +2,10 @@
 
 <config>
 
+	<!-- module name='http' required='no' / -->
+	<module name='civetweb' required='no' />
+	<module name='information' required='no' />
+
 	<!-- atasmart device-name='/dev/sda' / -->
 
 	<atasmart name='sda' device-name='/dev/sda' diskstats='true' update-timer='5' />
