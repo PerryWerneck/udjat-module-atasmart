@@ -56,19 +56,13 @@
 
 	}
 
-	Smart::Agent::Agent(const char *n) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), devicename(Quark(n).c_str()) {
+	Smart::Agent::Agent(const char *n) : Udjat::Agent<unsigned short>(getAgentName(n), -1), devicename(Quark(n).c_str()) {
 		init();
-		setDefaultStates();
 	}
 
-	Smart::Agent::Agent(const char *n, const pugi::xml_node &node) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), devicename(Quark(n).c_str()) {
+	Smart::Agent::Agent(const char *n, const pugi::xml_node &node) : Udjat::Agent<unsigned short>(getAgentName(n), -1), devicename(Quark(n).c_str()) {
 
 		init();
-		load(node);
-
-		if(!states.empty()) {
-			setDefaultStates();
-		}
 
 		if(Attribute(node,"diskstats",true).as_bool(false)) {
 
@@ -81,6 +75,92 @@
 
 	Smart::Agent::Agent(const pugi::xml_node &node)
 		: Agent(node.attribute("device-name").as_string(),node) {
+	}
+
+	void Smart::Agent::start() {
+
+		if(states.empty()) {
+
+			// Use default states.
+			info() << "Loading default states" << endl;
+
+			static const struct {
+				unsigned int					  value;		///< @brief Agent value for the state.
+				const char 						* name;			///< @brief State name.
+				Udjat::Level					  level;		///< @brief State level.
+				const char						* summary;		///< @brief State summary.
+				const char						* body;			///< @brief State description
+			} states[] = {
+
+				{
+					SK_SMART_OVERALL_GOOD,
+					"good",
+					Udjat::ready,
+					N_( "${name} Health is Good" ),
+					""
+				},
+				{
+					SK_SMART_OVERALL_BAD_ATTRIBUTE_IN_THE_PAST,
+					"badonthepast",
+					Udjat::ready,
+					N_( "Pre fail in the past on ${name}" ),
+					N_( "At least one pre-fail attribute exceeded its threshold in the past on ${name}" )
+				},
+				{
+					SK_SMART_OVERALL_BAD_SECTOR,
+					"badsector",
+					Udjat::warning,
+					N_( "Bad sector on ${name}" ),
+					N_( "At least one bad sector on ${name}" )
+				},
+				{
+					SK_SMART_OVERALL_BAD_ATTRIBUTE_NOW,
+					"badattribute",
+					Udjat::error,
+					N_( "Pre fail exceeded on ${name}" ),
+					N_( "At least one pre-fail attribute is exceeding its threshold now on ${name}" )
+				},
+				{
+					SK_SMART_OVERALL_BAD_SECTOR_MANY,
+					"manybad",
+					Udjat::error,
+					N_( "Too many bad sectors on ${name}" ),
+					""
+				},
+				{
+					SK_SMART_OVERALL_BAD_STATUS,
+					"badstatus",
+					Udjat::error,
+					N_( "Smart Self Assessment negative on ${name}" ),
+					""
+				},
+
+			};
+
+			for(size_t ix = 0; ix < (sizeof(states)/ sizeof(states[0])); ix++) {
+
+				this->states.push_back(
+					make_shared<Udjat::State<unsigned short>>(
+						states[ix].name,
+						states[ix].value,
+						states[ix].level,
+	#ifdef GETTEXT_PACKAGE
+						Quark(expand(dgettext(GETTEXT_PACKAGE,states[ix].summary))).c_str(),
+						Quark(expand(dgettext(GETTEXT_PACKAGE,states[ix].body))).c_str()
+	#else
+						Quark(expand(states[ix].summary)).c_str(),
+						Quark(expand(states[ix].body)).c_str()
+	#endif // GETTEXT_PACKAGE
+					)
+				);
+
+			}
+
+
+		}
+
+		super::start();
+
 	}
 
 	void Smart::Agent::init() {
@@ -139,10 +219,9 @@
 
 			set(Smart::Disk(devicename).read().getOverral());
 
-
 		} catch(const std::exception &e) {
 
-			failed( (string{"Can't get overall state of "} + devicename).c_str(), e);
+			failed(Logger::Message(_("Can't get overall state of {}"),devicename).c_str(), e);
 
 		}
 
@@ -202,83 +281,6 @@
 	Smart::Agent::~Agent() {
 	}
 
-	void Smart::Agent::setDefaultStates() {
-
-		static const struct {
-			unsigned int					  value;		///< @brief Agent value for the state.
-			const char 						* name;			///< @brief State name.
-			Udjat::Level					  level;		///< @brief State level.
-			const char						* summary;		///< @brief State summary.
-			const char						* body;			///< @brief State description
-		} states[] = {
-
-			{
-				SK_SMART_OVERALL_GOOD,
-				"good",
-				Udjat::ready,
-				N_( "${name} Health is Good" ),
-				""
-			},
-			{
-				SK_SMART_OVERALL_BAD_ATTRIBUTE_IN_THE_PAST,
-				"badonthepast",
-				Udjat::ready,
-				N_( "Pre fail in the past on ${name}" ),
-				N_( "At least one pre-fail attribute exceeded its threshold in the past on ${name}" )
-			},
-			{
-				SK_SMART_OVERALL_BAD_SECTOR,
-				"badsector",
-				Udjat::warning,
-				N_( "Bad sector on ${name}" ),
-				N_( "At least one bad sector on ${name}" )
-			},
-			{
-				SK_SMART_OVERALL_BAD_ATTRIBUTE_NOW,
-				"badattribute",
-				Udjat::error,
-				N_( "Pre fail exceeded on ${name}" ),
-				N_( "At least one pre-fail attribute is exceeding its threshold now on ${name}" )
-			},
-			{
-				SK_SMART_OVERALL_BAD_SECTOR_MANY,
-				"manybad",
-				Udjat::error,
-				N_( "Too many bad sectors on ${name}" ),
-				""
-			},
-			{
-				SK_SMART_OVERALL_BAD_STATUS,
-				"badstatus",
-				Udjat::error,
-				N_( "Smart Self Assessment negative on ${name}" ),
-				""
-			},
-
-		};
-
-		info() << "Using default states" << endl;
-
-		for(size_t ix = 0; ix < (sizeof(states)/ sizeof(states[0])); ix++) {
-
-			this->states.push_back(
-				make_shared<Udjat::State<unsigned short>>(
-					states[ix].name,
-					states[ix].value,
-					states[ix].level,
-#ifdef GETTEXT_PACKAGE
-					Quark(expand(dgettext(GETTEXT_PACKAGE,states[ix].summary))).c_str(),
-					Quark(expand(dgettext(GETTEXT_PACKAGE,states[ix].body))).c_str()
-#else
-					Quark(expand(states[ix].summary)).c_str(),
-					Quark(expand(states[ix].body)).c_str()
-#endif // GETTEXT_PACKAGE
-				)
-			);
-
-		}
-
-	}
 
  }
 

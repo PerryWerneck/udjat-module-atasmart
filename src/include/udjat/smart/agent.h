@@ -32,9 +32,6 @@
 		private:
 			const char *devicename;
 
-			/// @brief Load default states.
-			void setDefaultStates();
-
 			/// @brief Initialize
 			void init();
 
@@ -50,6 +47,8 @@
 			Agent(const pugi::xml_node &node);
 			Agent(const char *name, const pugi::xml_node &node);
 			virtual ~Agent();
+
+			void start() override;
 
 			/// @brief Get device name.
 			inline const char * getDeviceName() const noexcept {
