@@ -77,7 +77,109 @@
 		: Agent(node.attribute("device-name").as_string(),node) {
 	}
 
+	std::shared_ptr<Abstract::State> Smart::Agent::computeState() {
+
+		unsigned short value = super::get();
+
+		// Check registered states.
+		for(auto state : states) {
+			if(state->compare(value))
+				return state;
+		}
+
+		// Not found, check the predefined ones.
+		static const struct {
+			unsigned short					  value;		///< @brief Agent value for the state.
+			const char 						* name;			///< @brief State name.
+			Udjat::Level					  level;		///< @brief State level.
+			const char						* summary;		///< @brief State summary.
+			const char						* body;			///< @brief State description
+		} predefined_states[] = {
+
+			{
+				SK_SMART_OVERALL_GOOD,
+				"good",
+				Udjat::ready,
+				N_( "${name} Health is Good" ),
+				""
+			},
+			{
+				SK_SMART_OVERALL_BAD_ATTRIBUTE_IN_THE_PAST,
+				"badonthepast",
+				Udjat::ready,
+				N_( "Pre fail in the past on ${name}" ),
+				N_( "At least one pre-fail attribute exceeded its threshold in the past on ${name}" )
+			},
+			{
+				SK_SMART_OVERALL_BAD_SECTOR,
+				"badsector",
+				Udjat::warning,
+				N_( "Bad sector on ${name}" ),
+				N_( "At least one bad sector on ${name}" )
+			},
+			{
+				SK_SMART_OVERALL_BAD_ATTRIBUTE_NOW,
+				"badattribute",
+				Udjat::error,
+				N_( "Pre fail exceeded on ${name}" ),
+				N_( "At least one pre-fail attribute is exceeding its threshold now on ${name}" )
+			},
+			{
+				SK_SMART_OVERALL_BAD_SECTOR_MANY,
+				"manybad",
+				Udjat::error,
+				N_( "Too many bad sectors on ${name}" ),
+				""
+			},
+			{
+				SK_SMART_OVERALL_BAD_STATUS,
+				"badstatus",
+				Udjat::error,
+				N_( "Smart Self Assessment negative on ${name}" ),
+				""
+			},
+
+		};
+
+		for(size_t ix = 0; ix < N_ELEMENTS(predefined_states); ix++) {
+
+			if(predefined_states[ix].value == value) {
+
+				// Found internal state, use it.
+#ifdef GETTEXT_PACKAGE
+				String summary{dgettext(GETTEXT_PACKAGE,predefined_states[ix].summary)};
+				String body{dgettext(GETTEXT_PACKAGE,predefined_states[ix].body)};
+#else
+				String summary{predefined_states[ix].summary};
+				String body{predefined_states[ix].body};
+#endif // GETTEXT_PACKAGE
+
+				summary.expand(*this,true,true);
+				body.expand(*this,true,true);
+
+				auto new_state =
+					make_shared<Udjat::State<unsigned short>>(
+						predefined_states[ix].name,
+						predefined_states[ix].value,
+						predefined_states[ix].level,
+						Quark(summary).c_str(),
+						Quark(body).c_str()
+					);
+
+				states.push_back(new_state);
+				return new_state;
+
+			}
+
+		}
+
+		// Still not found, use the default one.
+		return Abstract::Agent::computeState();
+	}
+
+	/*
 	void Smart::Agent::start() {
+
 
 		if(states.empty()) {
 
@@ -144,13 +246,13 @@
 						states[ix].name,
 						states[ix].value,
 						states[ix].level,
-	#ifdef GETTEXT_PACKAGE
+#ifdef GETTEXT_PACKAGE
 						Quark(expand(dgettext(GETTEXT_PACKAGE,states[ix].summary))).c_str(),
 						Quark(expand(dgettext(GETTEXT_PACKAGE,states[ix].body))).c_str()
-	#else
+#else
 						Quark(expand(states[ix].summary)).c_str(),
 						Quark(expand(states[ix].body)).c_str()
-	#endif // GETTEXT_PACKAGE
+#endif // GETTEXT_PACKAGE
 					)
 				);
 
@@ -159,9 +261,10 @@
 
 		}
 
-		super::start();
+		Abstract::Agent::start();
 
 	}
+	*/
 
 	void Smart::Agent::init() {
 

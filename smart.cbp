@@ -33,7 +33,6 @@
 			<Add option="-Wall" />
 		</Compiler>
 		<Unit filename="src/include/udjat/smart/agent.h" />
-		<Unit filename="src/include/udjat/smart/device.h" />
 		<Unit filename="src/include/udjat/smart/disk.h" />
 		<Unit filename="src/module/agent.cc" />
 		<Unit filename="src/module/disk.cc" />

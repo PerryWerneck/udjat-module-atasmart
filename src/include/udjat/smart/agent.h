@@ -48,8 +48,6 @@
 			Agent(const char *name, const pugi::xml_node &node);
 			virtual ~Agent();
 
-			void start() override;
-
 			/// @brief Get device name.
 			inline const char * getDeviceName() const noexcept {
 				return this->devicename;
@@ -61,6 +59,7 @@
 			/// @brief Export device info.
 			void get(const Udjat::Request &request, Udjat::Response &response) override;
 
+			std::shared_ptr<Abstract::State> computeState() override;
 
 		};
 
