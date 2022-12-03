@@ -35,6 +35,7 @@
  #include <udjat/tools/intl.h>
  #include <udjat/request.h>
  #include <udjat/tools/disk/stat.h>
+ #include <udjat/tools/string.h>
  #include <sys/time.h>
 
  using Udjat::Quark;
@@ -332,7 +333,7 @@
 			Udjat::Disk::Stat(devicename).compute(stats);
 
 #ifdef DEBUG
-			info() << "Read=" << (stats.read / unit->value) << " Write=" << (stats.write / unit->value) << endl;
+			trace() << "Read=" << (stats.read / unit->value) << " Write=" << (stats.write / unit->value) << endl;
 #endif // DEBUG
 		}
 

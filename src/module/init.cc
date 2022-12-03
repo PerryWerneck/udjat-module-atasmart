@@ -39,22 +39,35 @@
  	virtual ~Module() {
  	}
 
-	std::shared_ptr<Abstract::Agent> AgentFactory(const Abstract::Object &parent, const pugi::xml_node &node) const override {
+	std::shared_ptr<Abstract::Agent> AgentFactory(const Abstract::Object UDJAT_UNUSED(&parent), const pugi::xml_node &node) const override {
 
-		/// @brief Container with all disks
+		const char * devname = node.attribute("device-name").as_string();
+
+		if(*devname) {
+
+			// Has device name, create a device node.
+			return  make_shared<Smart::Agent>(devname,node);
+
+		}
+
+		// No device name, create a container with all physical disks.
+
+		/// @brief Container with detected physical disks.
 		class PhysicalDisks : public Abstract::Agent {
 		public:
 			PhysicalDisks(const pugi::xml_node &node) : Abstract::Agent("storage") {
 
 				Object::properties.icon = "drive-multidisk";
 				Object::properties.label = "Physical disks";
+
 				load(node);
 
 				// Load disks
 				for(Disk::Stat &disk : Disk::Stat::get()) {
 
 					if(disk.minor == 0 && !disk.name.empty()) {
-						this->insert(make_shared<Smart::Agent>((string{"/dev/"} + disk.name).c_str(),node));
+						std::shared_ptr<Udjat::Abstract::Agent> agent = make_shared<Smart::Agent>((string{"/dev/"} + disk.name).c_str(),node);
+						Udjat::Abstract::Agent::push_back(agent);
 					}
 
 				}
@@ -77,10 +90,12 @@
 					if(!agent)
 						continue;
 
-					// Refresh agent data (if necessary).
+					// It's an smart agent ...
+
+					// ... Refresh agent data ...
 					agent->Abstract::Agent::refresh(true);
 
-					// It's an smart agent, export it.
+					// ... and export it.
 					Udjat::Value &device = devices.append();
 
 					device["name"] = agent->name();
@@ -94,16 +109,6 @@
 
 		};
 
-		const char * devname = node.attribute("device-name").as_string();
-
-		if(*devname) {
-
-			// Has device name, create a device node.
-			return  make_shared<Smart::Agent>(devname,node);
-
-		}
-
-		// No device name, create a container with all physical disks.
 		return make_shared<PhysicalDisks>(node);
 
 	}
