@@ -1,2 +1,2 @@
 # udjat-module-atasmart
-ATA S.M.A.R.T. Disk Health Monitoring module for udjat
+ATA S.M.A.R.T. Disk Health agent for udjat
