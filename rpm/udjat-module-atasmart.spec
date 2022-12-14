@@ -16,7 +16,10 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
 
-Summary:		ATA S.M.A.R.T. Disk Health Monitoring module for udjat 
+%define product_name %(pkg-config --variable=product_name libudjat)
+%define module_path %(pkg-config --variable=module_path libudjat)
+
+Summary:		ATA S.M.A.R.T. Disk Health Monitoring module for %{product_name} 
 Name:			udjat-module-atasmart
 Version:		1.0
 Release:		0
@@ -40,9 +43,9 @@ BuildRequires:	pkgconfig(libatasmart)
 BuildRequires:	pkgconfig(udjat-sysinfo) 
 
 %description
-ATA S.M.A.R.T. Disk Health Monitoring module for udjat
+ATA S.M.A.R.T. Disk Health Monitoring module for %{product_name}
 
-Add physical disk state agent(s) to the udjat agent tree.
+Add physical disk state agent(s) to the %{product_name} agent tree.
 
 #---[ Build & Install ]-----------------------------------------------------------------------------------------------
 
@@ -62,8 +65,8 @@ make all
 
 %files
 %defattr(-,root,root)
-%{_libdir}/udjat-modules/*.so
-%config %{_sysconfdir}/udjat.conf.d/*.conf
+%{module_path}/*.so
+%config %{_sysconfdir}/%{product_name}.conf.d/*.conf
 
 %changelog
 
