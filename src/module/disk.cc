@@ -120,6 +120,9 @@
 		uint64_t mseconds;
 
 		if(sk_disk_smart_get_power_on(d,&mseconds) < 0) {
+			if(errno == ENOENT) {
+				return 0;
+			}
 			throw system_error(errno, system_category(), "Can't get power on");
 		}
 
@@ -143,11 +146,14 @@
 
 		uint64_t value;
 		if(sk_disk_smart_get_temperature(d,&value) < 0) {
+			if(errno == ENOENT) {
+				return Temperature{};
+			}
 			throw system_error(errno, system_category(), "Can't get temperature");
 		}
 
 		// The smart value is in 'Kelvin'
-		Temperature temperature( ((float) value / 1000), Temperature::Kelvin);
+		Temperature temperature{((float) value / 1000), Temperature::Kelvin};
 
 		Config::Value<string> unitname("smart","temperature-unit","C");
 

@@ -40,7 +40,14 @@
 
 	public:
 
+		constexpr Temperature() : unity(Celsius), value(0) { }
 		constexpr Temperature(const float v, const Unity u) : unity(u), value(v) { }
+
+		inline Temperature & set(const float v, const enum Unity u) {
+			value = v;
+			unity = u;
+			return *this;
+		}
 
 		Temperature & set(const enum Unity unity);
 

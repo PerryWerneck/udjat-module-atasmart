@@ -19,6 +19,7 @@
 
  #include <udjat/tools/temperature.h>
  #include <sstream>
+ #include <cmath>
 
  using namespace std;
 
@@ -107,6 +108,10 @@
 	}
 
 	std::string Temperature::to_string() const {
+
+		if(FP_ZERO == fpclassify(this->value)) {
+			return "";
+		}
 
 		// https://www.delftstack.com/howto/cpp/how-to-convert-float-to-string-in-cpp/
 		// https://www.delftstack.com/howto/cpp/cpp-round-to-2-decimals/
