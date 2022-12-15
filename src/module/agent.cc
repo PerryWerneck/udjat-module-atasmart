@@ -366,7 +366,7 @@
 			}
 
 			response["badsectors"] = disk.badsectors();
-			// response["poweron"] = disk.poweron();
+			response["poweron"] = disk.poweron();
 			response["powercicle"] = disk.powercicle();
 
 			if(unit) {

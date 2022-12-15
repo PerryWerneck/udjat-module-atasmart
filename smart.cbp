@@ -32,8 +32,10 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="src/include/config.h" />
 		<Unit filename="src/include/udjat/smart/agent.h" />
 		<Unit filename="src/include/udjat/smart/disk.h" />
+		<Unit filename="src/include/udjat/tools/temperature.h" />
 		<Unit filename="src/module/agent.cc" />
 		<Unit filename="src/module/disk.cc" />
 		<Unit filename="src/module/init.cc" />
