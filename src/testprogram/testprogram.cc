@@ -17,45 +17,51 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+ #include <config.h>
+
+ #include <udjat/tools/systemservice.h>
+ #include <udjat/tools/application.h>
+ #include <udjat/tools/http/client.h>
+ #include <udjat/agent.h>
+ #include <udjat/factory.h>
  #include <udjat/module.h>
- #include <udjat/tools/logger.h>
- #include <udjat/tools/disk/stat.h>
- #include <udjat/tools/mainloop.h>
- #include <unistd.h>
- #include <list>
+ #include <iostream>
+ #include <memory>
 
  using namespace std;
  using namespace Udjat;
 
 //---[ Implement ]------------------------------------------------------------------------------------------
 
-static void agent_test() {
-
-	for(auto agent : *Abstract::Agent::init("${PWD}/test.xml")) {
-		cout << "http://localhost:8989/api/1.0/agent/" << agent->getName() << ".xml" << endl;
-	}
-
-	cout << "Waiting for requests" << endl;
-	Udjat::MainLoop::getInstance().run();
-
-	Abstract::Agent::deinit();
-
-}
-
 int main(int argc, char **argv) {
 
-	setlocale( LC_ALL, "" );
+	class Service : public SystemService {
+	protected:
+		/// @brief Initialize service.
+		void init() override {
 
-	Logger::redirect(nullptr,true);
+			udjat_module_init();
+			SystemService::init();
 
-	Module::load("http",false);
-	auto module = udjat_module_init();
+		}
 
-	agent_test();
+		/// @brief Deinitialize service.
+		void deinit() override {
+			cout << Application::Name() << "\t**** Deinitializing" << endl;
+			Udjat::Module::unload();
+		}
 
-	cout << "Removing module" << endl;
-	delete module;
-	Module::unload();
+	public:
+		Service() : SystemService{"./test.xml"} {
+		}
+
+
+	};
+
+	Service().run(argc,argv);
+
+	cout << "*** Test program finished" << endl;
 
 	return 0;
+
 }

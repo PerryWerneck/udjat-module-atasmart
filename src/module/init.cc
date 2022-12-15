@@ -19,6 +19,7 @@
 
  #include <config.h>
  #include <udjat/module.h>
+ #include <udjat/moduleinfo.h>
  #include <udjat/factory.h>
  #include <udjat/tools/disk/stat.h>
  #include <unistd.h>
@@ -27,39 +28,46 @@
 
  using namespace std;
 
- static const Udjat::ModuleInfo moduleinfo{
-	PACKAGE_NAME,								// The module name.
-	"ATA S.M.A.R.T. Disk Health Monitoring", 	// The module description.
-	PACKAGE_VERSION, 							// The module version.
-	PACKAGE_URL, 								// The package URL.
-	PACKAGE_BUGREPORT 							// The bug report address.
- };
+ static const Udjat::ModuleInfo moduleinfo{"ATA S.M.A.R.T. Disk Health Monitor"};
 
  class Module : public Udjat::Module, Udjat::Factory {
  public:
 
- 	Module() : Udjat::Module("atasmart",&moduleinfo), Udjat::Factory("atasmart",&moduleinfo) {
+ 	Module() : Udjat::Module("atasmart",moduleinfo), Udjat::Factory("atasmart",moduleinfo) {
  	};
 
  	virtual ~Module() {
  	}
 
-	bool parse(Udjat::Abstract::Agent &parent, const pugi::xml_node &node) const override {
+	std::shared_ptr<Abstract::Agent> AgentFactory(const Abstract::Object UDJAT_UNUSED(&parent), const pugi::xml_node &node) const override {
 
-		/// @brief Container with all disks
+		const char * devname = node.attribute("device-name").as_string();
+
+		if(*devname) {
+
+			// Has device name, create a device node.
+			return  make_shared<Smart::Agent>(devname,node);
+
+		}
+
+		// No device name, create a container with all physical disks.
+
+		/// @brief Container with detected physical disks.
 		class PhysicalDisks : public Abstract::Agent {
 		public:
 			PhysicalDisks(const pugi::xml_node &node) : Abstract::Agent("storage") {
 
-				icon = "drive-multidisk";
-				label = "Physical disks";
+				Object::properties.icon = "drive-multidisk";
+				Object::properties.label = "Physical disks";
+
 				load(node);
 
 				// Load disks
 				for(Disk::Stat &disk : Disk::Stat::get()) {
 
 					if(disk.minor == 0 && !disk.name.empty()) {
-						this->insert(make_shared<Smart::Agent>((string{"/dev/"} + disk.name).c_str(),node,false));
+						std::shared_ptr<Udjat::Abstract::Agent> agent = make_shared<Smart::Agent>((string{"/dev/"} + disk.name).c_str(),node);
+						Udjat::Abstract::Agent::push_back(agent);
 					}
 
 				}
@@ -82,16 +90,18 @@
 					if(!agent)
 						continue;
 
-					// Refresh agent data (if necessary).
+					// It's an smart agent ...
+
+					// ... Refresh agent data ...
 					agent->Abstract::Agent::refresh(true);
 
-					// It's an smart agent, export it.
+					// ... and export it.
 					Udjat::Value &device = devices.append();
 
-					device["name"] = agent->getName();
+					device["name"] = agent->name();
 					device["device"] = agent->getDeviceName();
-					device["summary"] = agent->getSummary();
-					device["state"] = agent->getState()->getSummary();
+					device["summary"] = agent->summary();
+					device["state"] = agent->state()->summary();
 
 				}
 
@@ -99,21 +109,7 @@
 
 		};
 
-		const char * devname = node.attribute("device-name").as_string();
-
-		if(*devname) {
-
-			// Has device name, create a device node.
-			parent.insert(make_shared<Smart::Agent>(devname,node,true));
-
-		} else {
-
-			// No device name, create a container with all physical disks.
-			parent.insert(make_shared<PhysicalDisks>(node));
-
-		}
-
-		return true;
+		return make_shared<PhysicalDisks>(node);
 
 	}
 

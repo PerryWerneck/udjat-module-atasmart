@@ -31,9 +31,11 @@
  #include "private.h"
  #include <udjat/tools/quark.h>
  #include <udjat/smart/disk.h>
- #include <udjat/state.h>
+ #include <udjat/tools/logger.h>
+ #include <udjat/tools/intl.h>
  #include <udjat/request.h>
  #include <udjat/tools/disk/stat.h>
+ #include <udjat/tools/string.h>
  #include <sys/time.h>
 
  using Udjat::Quark;
@@ -55,55 +57,238 @@
 
 	}
 
-	Smart::Agent::Agent(const char *n) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
+	Smart::Agent::Agent(const char *n) : Udjat::Agent<unsigned short>(getAgentName(n), -1), devicename(Quark(n).c_str()) {
 		init();
-		setDefaultStates();
 	}
 
-	Smart::Agent::Agent(const char *n, const pugi::xml_node &node,bool name_from_xml) : Udjat::Agent<unsigned short>(getAgentName(n), SK_SMART_OVERALL_GOOD), name(Quark(n).c_str()) {
+	Smart::Agent::Agent(const char *n, const pugi::xml_node &node) : Udjat::Agent<unsigned short>(getAgentName(n), -1), devicename(Quark(n).c_str()) {
 
 		init();
-		load(node,name_from_xml);
-
-		if(!hasStates()) {
-			setDefaultStates();
-		}
 
 		if(Attribute(node,"diskstats",true).as_bool(false)) {
 
 			unit = Udjat::Disk::Unit::get(node);
-			Udjat::Disk::Stat(name).reset(stats);
+			Udjat::Disk::Stat(devicename).reset(stats);
 
 		}
 
 	}
 
 	Smart::Agent::Agent(const pugi::xml_node &node)
-		: Agent(node.attribute("device-name").as_string(),node,true) {
+		: Agent(node.attribute("device-name").as_string(),node) {
 	}
+
+	std::shared_ptr<Abstract::State> Smart::Agent::computeState() {
+
+		unsigned short value = super::get();
+
+		// Check registered states.
+		for(auto state : states) {
+			if(state->compare(value))
+				return state;
+		}
+
+		// Not found, check the predefined ones.
+		static const struct {
+			unsigned short					  value;		///< @brief Agent value for the state.
+			const char 						* name;			///< @brief State name.
+			Udjat::Level					  level;		///< @brief State level.
+			const char						* summary;		///< @brief State summary.
+			const char						* body;			///< @brief State description
+		} predefined_states[] = {
+
+			{
+				SK_SMART_OVERALL_GOOD,
+				"good",
+				Udjat::ready,
+				N_( "${name} Health is Good" ),
+				""
+			},
+			{
+				SK_SMART_OVERALL_BAD_ATTRIBUTE_IN_THE_PAST,
+				"badonthepast",
+				Udjat::ready,
+				N_( "Pre fail in the past on ${name}" ),
+				N_( "At least one pre-fail attribute exceeded its threshold in the past on ${name}" )
+			},
+			{
+				SK_SMART_OVERALL_BAD_SECTOR,
+				"badsector",
+				Udjat::warning,
+				N_( "Bad sector on ${name}" ),
+				N_( "At least one bad sector on ${name}" )
+			},
+			{
+				SK_SMART_OVERALL_BAD_ATTRIBUTE_NOW,
+				"badattribute",
+				Udjat::error,
+				N_( "Pre fail exceeded on ${name}" ),
+				N_( "At least one pre-fail attribute is exceeding its threshold now on ${name}" )
+			},
+			{
+				SK_SMART_OVERALL_BAD_SECTOR_MANY,
+				"manybad",
+				Udjat::error,
+				N_( "Too many bad sectors on ${name}" ),
+				""
+			},
+			{
+				SK_SMART_OVERALL_BAD_STATUS,
+				"badstatus",
+				Udjat::error,
+				N_( "Smart Self Assessment negative on ${name}" ),
+				""
+			},
+
+		};
+
+		for(size_t ix = 0; ix < N_ELEMENTS(predefined_states); ix++) {
+
+			if(predefined_states[ix].value == value) {
+
+				// Found internal state, use it.
+#ifdef GETTEXT_PACKAGE
+				String summary{dgettext(GETTEXT_PACKAGE,predefined_states[ix].summary)};
+				String body{dgettext(GETTEXT_PACKAGE,predefined_states[ix].body)};
+#else
+				String summary{predefined_states[ix].summary};
+				String body{predefined_states[ix].body};
+#endif // GETTEXT_PACKAGE
+
+				summary.expand(*this,true,true);
+				body.expand(*this,true,true);
+
+				auto new_state =
+					make_shared<Udjat::State<unsigned short>>(
+						predefined_states[ix].name,
+						predefined_states[ix].value,
+						predefined_states[ix].level,
+						Quark(summary).c_str(),
+						Quark(body).c_str()
+					);
+
+				states.push_back(new_state);
+				return new_state;
+
+			}
+
+		}
+
+		// Still not found, use the default one.
+		return Abstract::Agent::computeState();
+	}
+
+	/*
+	void Smart::Agent::start() {
+
+
+		if(states.empty()) {
+
+			// Use default states.
+			info() << "Loading default states" << endl;
+
+			static const struct {
+				unsigned int					  value;		///< @brief Agent value for the state.
+				const char 						* name;			///< @brief State name.
+				Udjat::Level					  level;		///< @brief State level.
+				const char						* summary;		///< @brief State summary.
+				const char						* body;			///< @brief State description
+			} states[] = {
+
+				{
+					SK_SMART_OVERALL_GOOD,
+					"good",
+					Udjat::ready,
+					N_( "${name} Health is Good" ),
+					""
+				},
+				{
+					SK_SMART_OVERALL_BAD_ATTRIBUTE_IN_THE_PAST,
+					"badonthepast",
+					Udjat::ready,
+					N_( "Pre fail in the past on ${name}" ),
+					N_( "At least one pre-fail attribute exceeded its threshold in the past on ${name}" )
+				},
+				{
+					SK_SMART_OVERALL_BAD_SECTOR,
+					"badsector",
+					Udjat::warning,
+					N_( "Bad sector on ${name}" ),
+					N_( "At least one bad sector on ${name}" )
+				},
+				{
+					SK_SMART_OVERALL_BAD_ATTRIBUTE_NOW,
+					"badattribute",
+					Udjat::error,
+					N_( "Pre fail exceeded on ${name}" ),
+					N_( "At least one pre-fail attribute is exceeding its threshold now on ${name}" )
+				},
+				{
+					SK_SMART_OVERALL_BAD_SECTOR_MANY,
+					"manybad",
+					Udjat::error,
+					N_( "Too many bad sectors on ${name}" ),
+					""
+				},
+				{
+					SK_SMART_OVERALL_BAD_STATUS,
+					"badstatus",
+					Udjat::error,
+					N_( "Smart Self Assessment negative on ${name}" ),
+					""
+				},
+
+			};
+
+			for(size_t ix = 0; ix < (sizeof(states)/ sizeof(states[0])); ix++) {
+
+				this->states.push_back(
+					make_shared<Udjat::State<unsigned short>>(
+						states[ix].name,
+						states[ix].value,
+						states[ix].level,
+#ifdef GETTEXT_PACKAGE
+						Quark(expand(dgettext(GETTEXT_PACKAGE,states[ix].summary))).c_str(),
+						Quark(expand(dgettext(GETTEXT_PACKAGE,states[ix].body))).c_str()
+#else
+						Quark(expand(states[ix].summary)).c_str(),
+						Quark(expand(states[ix].body)).c_str()
+#endif // GETTEXT_PACKAGE
+					)
+				);
+
+			}
+
+
+		}
+
+		Abstract::Agent::start();
+
+	}
+	*/
 
 	void Smart::Agent::init() {
 
-		icon = "drive-harddisk";
+		Object::properties.icon = "drive-harddisk";
 
-		if(!(this->label && *this->label)) {
+		if(!(Object::properties.label && *Object::properties.label)) {
 			string label{"Hard disk "};
 
-			const char * ptr = strrchr(this->name,'/');
+			const char * ptr = strrchr(this->devicename,'/');
 			if(ptr) {
 				label += (ptr+1);
 			} else {
-				label += name;
+				label += devicename;
 			}
 
-			this->label = Quark(label).c_str();
+			Object::properties.label = Quark(label).c_str();
 		}
 
 		// Get data from disk.
 
 		try {
 
-			Smart::Disk disk(name);
+			Smart::Disk disk(devicename);
 
 			auto ipd = disk.read().identify();
 
@@ -117,15 +302,15 @@
 
 			} catch(const std::exception &e) {
 
-				cerr << name << "\t" << e.what();
+				error() << e.what();
 
 			}
 
-			this->summary = Quark(summary).c_str();
+			Object::properties.summary = Quark(summary).c_str();
 
 		} catch(const std::exception &e) {
 
-			error("Error '{}' getting device information",e.what());
+			error() << Logger::Message("Error '{}' getting device information",e) << endl;
 
 		}
 
@@ -136,20 +321,19 @@
 
 		try {
 
-			set(Smart::Disk(name).read().getOverral());
-
+			set(Smart::Disk(devicename).read().getOverral());
 
 		} catch(const std::exception &e) {
 
-			failed( (string{"Can't get overall state of "} + name).c_str(), e);
+			failed(Logger::Message(_("Can't get overall state of {}"),devicename).c_str(), e);
 
 		}
 
 		if(unit) {
-			Udjat::Disk::Stat(name).compute(stats);
+			Udjat::Disk::Stat(devicename).compute(stats);
 
 #ifdef DEBUG
-			info("Read={} Write={}",stats.read / unit->value, stats.write / unit->value);
+			trace() << "Read=" << (stats.read / unit->value) << " Write=" << (stats.write / unit->value) << endl;
 #endif // DEBUG
 		}
 
@@ -164,7 +348,7 @@
 
 		try {
 
-			Smart::Disk disk(name);
+			Smart::Disk disk(devicename);
 			disk.read();
 
 			response["temperature"] = disk.temperature().to_string().c_str();
@@ -192,7 +376,7 @@
 
 		} catch(const exception &e) {
 
-			error("Error '{}' getting device info",e.what());
+			error() << "Error '" << e.what() << "' getting device info" << endl;
 
 		}
 
@@ -201,84 +385,6 @@
 	Smart::Agent::~Agent() {
 	}
 
-	void Smart::Agent::setDefaultStates() {
-
-		static const struct {
-			unsigned int					  value;		///< @brief Agent value for the state.
-			const char 						* name;			///< @brief State name.
-			Udjat::Level					  level;		///< @brief State level.
-			const char						* summary;		///< @brief State summary.
-			const char						* body;			///< @brief State description
-		} states[] = {
-
-			{
-				SK_SMART_OVERALL_GOOD,
-				"good",
-				Udjat::ready,
-				"${agent.name} Health is Good",
-				""
-			},
-			{
-				SK_SMART_OVERALL_BAD_ATTRIBUTE_IN_THE_PAST,
-				"badonthepast",
-				Udjat::ready,
-				"Pre fail in the past on ${agent.name}",
-				"At least one pre-fail attribute exceeded its threshold in the past on ${agent.name}"
-			},
-			{
-				SK_SMART_OVERALL_BAD_SECTOR,
-				"badsector",
-				Udjat::warning,
-				"Bad sector on ${name}",
-				"At least one bad sector on ${agent.name}"
-			},
-			{
-				SK_SMART_OVERALL_BAD_ATTRIBUTE_NOW,
-				"badattribute",
-				Udjat::error,
-				"Pre fail exceeded on ${name}",
-				"At least one pre-fail attribute is exceeding its threshold now on ${agent.name}"
-			},
-			{
-				SK_SMART_OVERALL_BAD_SECTOR_MANY,
-				"manybad",
-				Udjat::error,
-				"Many bad sectors on ${agent.name}",
-				""
-			},
-			{
-				SK_SMART_OVERALL_BAD_STATUS,
-				"badstatus",
-				Udjat::error,
-				"Smart Self Assessment negative on ${agent.name}",
-				""
-			},
-
-		};
-
-		cout << this->getName() << "\tUsing default states" << endl;
-
-		for(size_t ix = 0; ix < (sizeof(states)/ sizeof(states[0])); ix++) {
-
-			string summary(states[ix].summary);
-			string body(states[ix].body);
-
-			expand(summary);
-			expand(body);
-
-			push_back(
-				make_shared<Udjat::State<unsigned short>>(
-					states[ix].name,
-					states[ix].value,
-					states[ix].level,
-					Quark(summary).c_str(),
-					Quark(body).c_str()
-				)
-			);
-
-		}
-
-	}
 
  }
 

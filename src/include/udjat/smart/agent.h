@@ -30,10 +30,7 @@
 		/// @brief S.M.A.R.T. agent.
 		class UDJAT_API Agent : public Udjat::Agent<unsigned short> {
 		private:
-			const char *name;
-
-			/// @brief Load default states.
-			void setDefaultStates();
+			const char *devicename;
 
 			/// @brief Initialize
 			void init();
@@ -48,12 +45,12 @@
 
 			Agent(const char *name);
 			Agent(const pugi::xml_node &node);
-			Agent(const char *name, const pugi::xml_node &node, bool name_from_xml);
+			Agent(const char *name, const pugi::xml_node &node);
 			virtual ~Agent();
 
 			/// @brief Get device name.
 			inline const char * getDeviceName() const noexcept {
-				return this->name;
+				return this->devicename;
 			}
 
 			/// @brief Get device status, update internal state.
@@ -62,6 +59,7 @@
 			/// @brief Export device info.
 			void get(const Udjat::Request &request, Udjat::Response &response) override;
 
+			std::shared_ptr<Abstract::State> computeState() override;
 
 		};
 
