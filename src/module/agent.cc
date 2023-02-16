@@ -28,7 +28,12 @@
   *
   */
 
+ #include <config.h>
+ #include <udjat/defs.h>
+
  #include "private.h"
+
+ #include <udjat/agent/abstract.h>
  #include <udjat/tools/quark.h>
  #include <udjat/smart/disk.h>
  #include <udjat/tools/logger.h>
@@ -178,95 +183,6 @@
 		return Abstract::Agent::computeState();
 	}
 
-	/*
-	void Smart::Agent::start() {
-
-
-		if(states.empty()) {
-
-			// Use default states.
-			info() << "Loading default states" << endl;
-
-			static const struct {
-				unsigned int					  value;		///< @brief Agent value for the state.
-				const char 						* name;			///< @brief State name.
-				Udjat::Level					  level;		///< @brief State level.
-				const char						* summary;		///< @brief State summary.
-				const char						* body;			///< @brief State description
-			} states[] = {
-
-				{
-					SK_SMART_OVERALL_GOOD,
-					"good",
-					Udjat::ready,
-					N_( "${name} Health is Good" ),
-					""
-				},
-				{
-					SK_SMART_OVERALL_BAD_ATTRIBUTE_IN_THE_PAST,
-					"badonthepast",
-					Udjat::ready,
-					N_( "Pre fail in the past on ${name}" ),
-					N_( "At least one pre-fail attribute exceeded its threshold in the past on ${name}" )
-				},
-				{
-					SK_SMART_OVERALL_BAD_SECTOR,
-					"badsector",
-					Udjat::warning,
-					N_( "Bad sector on ${name}" ),
-					N_( "At least one bad sector on ${name}" )
-				},
-				{
-					SK_SMART_OVERALL_BAD_ATTRIBUTE_NOW,
-					"badattribute",
-					Udjat::error,
-					N_( "Pre fail exceeded on ${name}" ),
-					N_( "At least one pre-fail attribute is exceeding its threshold now on ${name}" )
-				},
-				{
-					SK_SMART_OVERALL_BAD_SECTOR_MANY,
-					"manybad",
-					Udjat::error,
-					N_( "Too many bad sectors on ${name}" ),
-					""
-				},
-				{
-					SK_SMART_OVERALL_BAD_STATUS,
-					"badstatus",
-					Udjat::error,
-					N_( "Smart Self Assessment negative on ${name}" ),
-					""
-				},
-
-			};
-
-			for(size_t ix = 0; ix < (sizeof(states)/ sizeof(states[0])); ix++) {
-
-				this->states.push_back(
-					make_shared<Udjat::State<unsigned short>>(
-						states[ix].name,
-						states[ix].value,
-						states[ix].level,
-#ifdef GETTEXT_PACKAGE
-						Quark(expand(dgettext(GETTEXT_PACKAGE,states[ix].summary))).c_str(),
-						Quark(expand(dgettext(GETTEXT_PACKAGE,states[ix].body))).c_str()
-#else
-						Quark(expand(states[ix].summary)).c_str(),
-						Quark(expand(states[ix].body)).c_str()
-#endif // GETTEXT_PACKAGE
-					)
-				);
-
-			}
-
-
-		}
-
-		Abstract::Agent::start();
-
-	}
-	*/
-
 	void Smart::Agent::init() {
 
 		Object::properties.icon = "drive-harddisk";
@@ -342,36 +258,36 @@
 	}
 
 	/// @brief Export device info.
-	void Smart::Agent::get(const Udjat::Request &request, Udjat::Response &response) {
+	Udjat::Value & Smart::Agent::getProperties(Udjat::Value &value) const noexcept {
 
-		Udjat::Abstract::Agent::get(request,response);
+		super::getProperties(value);
 
 		try {
 
 			Smart::Disk disk(devicename);
 			disk.read();
 
-			response["temperature"] = disk.temperature().to_string().c_str();
-			response["size"] = disk.formattedSize();
+			value["temperature"] = disk.temperature().to_string().c_str();
+			value["size"] = disk.formattedSize();
 
 			if(disk.identify_is_available()) {
 				auto ipd = disk.read().identify();
-				response["serial"] = ipd->serial;
-				response["firmware"] = ipd->firmware;
-				response["model"] = ipd->model;
+				value["serial"] = ipd->serial;
+				value["firmware"] = ipd->firmware;
+				value["model"] = ipd->model;
 			} else {
-				response["serial"] = "";
-				response["firmware"] = "";
-				response["model"] = "";
+				value["serial"] = "";
+				value["firmware"] = "";
+				value["model"] = "";
 			}
 
-			response["badsectors"] = disk.badsectors();
-			response["poweron"] = disk.poweron();
-			response["powercicle"] = disk.powercicle();
+			value["badsectors"] = disk.badsectors();
+			value["poweron"] = disk.poweron();
+			value["powercicle"] = disk.powercicle();
 
 			if(unit) {
-				response["read"] = stats.read / unit->value;
-				response["write"] = stats.write / unit->value;
+				value["read"] = stats.read / unit->value;
+				value["write"] = stats.write / unit->value;
 			}
 
 		} catch(const exception &e) {
@@ -380,6 +296,7 @@
 
 		}
 
+		return value;
 	}
 
 	Smart::Agent::~Agent() {

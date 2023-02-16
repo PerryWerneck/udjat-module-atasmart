@@ -78,11 +78,11 @@
 			}
 
 			/// @brief Export device info.
-			void get(const Udjat::Request &request, Udjat::Response &response) override {
+			Udjat::Value & getProperties(Udjat::Value &value) const noexcept override {
 
-				Abstract::Agent::get(request,response);
+				super::getProperties(value);
 
-				Udjat::Value &devices = response["devices"];
+				Udjat::Value &devices = value["devices"];
 
 				for(auto child : *this) {
 
@@ -104,6 +104,8 @@
 					device["state"] = agent->state()->summary();
 
 				}
+
+				return value;
 
 			}
 

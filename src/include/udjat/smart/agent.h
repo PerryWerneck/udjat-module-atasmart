@@ -57,7 +57,7 @@
 			bool refresh() override;
 
 			/// @brief Export device info.
-			void get(const Udjat::Request &request, Udjat::Response &response) override;
+			Udjat::Value & getProperties(Udjat::Value &value) const noexcept override;
 
 			std::shared_ptr<Abstract::State> computeState() override;
 

@@ -19,9 +19,9 @@
 
  #include <config.h>
 
- #include <udjat/tools/systemservice.h>
  #include <udjat/tools/application.h>
  #include <udjat/tools/http/client.h>
+ #include <udjat/tools/logger.h>
  #include <udjat/agent.h>
  #include <udjat/factory.h>
  #include <udjat/module.h>
@@ -35,33 +35,12 @@
 
 int main(int argc, char **argv) {
 
-	class Service : public SystemService {
-	protected:
-		/// @brief Initialize service.
-		void init() override {
+	Logger::verbosity(9);
+	Logger::console(true);
+	Logger::redirect();
 
-			udjat_module_init();
-			SystemService::init();
+	udjat_module_init();
 
-		}
-
-		/// @brief Deinitialize service.
-		void deinit() override {
-			cout << Application::Name() << "\t**** Deinitializing" << endl;
-			Udjat::Module::unload();
-		}
-
-	public:
-		Service() : SystemService{"./test.xml"} {
-		}
-
-
-	};
-
-	Service().run(argc,argv);
-
-	cout << "*** Test program finished" << endl;
-
-	return 0;
+	return Application{}.run(argc,argv,"./test.xml");
 
 }
